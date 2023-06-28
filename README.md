@@ -1,3 +1,7 @@
-# [pjz](https://github.com/spinsphotonics/fdtdz) 😴👕👖💤 -- a minimal toolset for photonics on JAX
+# [pjz](https://github.com/spinsphotonics/fdtdz) 😴👕👖💤 -- a small toolset for photonics on JAX
 
-**pjz** (pee-jayz) is [JAX](https://github.com/google/jax) and [fdtd-z](https://github.com/spinsphotonics/fdtdz) enabling photonic designers to harness compute at scale.
+**pjz** (pee-jayz), [JAX](https://github.com/google/jax) augmented with [fdtd-z](https://github.com/spinsphotonics/fdtdz),
+enables photonic designers to harness compute at scale
+by providing a simple set of tools to express photonic simulation and optimization workflows in JAX.
+
+
