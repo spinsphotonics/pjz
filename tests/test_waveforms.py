@@ -1,4 +1,4 @@
-from pjz import waveforms
+import pjz
 
 import jax.numpy as jnp
 import numpy as np
@@ -10,5 +10,5 @@ def test_ramped_sin():
   dt = 0.5
   tt = 100000
   np.testing.assert_array_almost_equal(
-      waveforms.ramped_sin(omega, width=3, delay=4, dt=dt, tt=tt)[-10:],
+      pjz.ramped_sin(omega, width=3, delay=4, dt=dt, tt=tt)[-10:],
       jnp.sin(omega * dt * jnp.arange(tt))[-10:])

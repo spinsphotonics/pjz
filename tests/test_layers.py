@@ -1,4 +1,4 @@
-from pjz import layers
+import pjz
 
 import jax
 import jax.numpy as jnp
@@ -30,11 +30,11 @@ def test_simple(domain, m, vals, thresh, index, expected):
   xx, yy, zz = domain
   layer = vals[0] * jnp.ones((2, 2 * m * xx, 2 * m * yy))
   layer = layer.at[1, thresh[0]:, thresh[1]:].set(vals[1])
-  out = layers.render(layer,
-                      jnp.array([thresh[2]]),
-                      jnp.arange(zz)[:, None] + jnp.array([[-0.5, 0]]),
-                      jnp.arange(zz)[:, None] + jnp.array([[0.5, 1]]),
-                      m)
+  out = pjz.render(layer,
+                   jnp.array([thresh[2]]),
+                   jnp.arange(zz)[:, None] + jnp.array([[-0.5, 0]]),
+                   jnp.arange(zz)[:, None] + jnp.array([[0.5, 1]]),
+                   m)
   assert out[index] == pytest.approx(expected)
 
 
@@ -81,11 +81,11 @@ def test_x_threshold(m, thresh, component, index, expected):
   vals = (1, 3)
   layer = vals[0] * jnp.ones((1, 2 * m * xx, 2 * m * yy))
   layer = layer.at[0, thresh:, :].set(vals[1])
-  out = layers.render(layer,
-                      jnp.array([]),
-                      jnp.arange(zz)[:, None] + jnp.array([[-0.5, 0]]),
-                      jnp.arange(zz)[:, None] + jnp.array([[0.5, 1]]),
-                      m)
+  out = pjz.render(layer,
+                   jnp.array([]),
+                   jnp.arange(zz)[:, None] + jnp.array([[-0.5, 0]]),
+                   jnp.arange(zz)[:, None] + jnp.array([[0.5, 1]]),
+                   m)
   assert out[component, index, 0, 0] == pytest.approx(expected)
 
 
@@ -108,11 +108,11 @@ def test_z_threshold(thresh, component, index, expected):
   vals = (1, 3)
   layer = vals[0] * jnp.ones((2, 2 * xx, 2 * yy))
   layer = layer.at[1].set(vals[1])
-  out = layers.render(layer,
-                      jnp.array([thresh]),
-                      jnp.arange(zz)[:, None] + jnp.array([[-0.5, 0]]),
-                      jnp.arange(zz)[:, None] + jnp.array([[0.5, 1]]),
-                      m=1)
+  out = pjz.render(layer,
+                   jnp.array([thresh]),
+                   jnp.arange(zz)[:, None] + jnp.array([[-0.5, 0]]),
+                   jnp.arange(zz)[:, None] + jnp.array([[0.5, 1]]),
+                   m=1)
   assert out[component, 0, 0, index] == pytest.approx(expected)
 
 
@@ -168,17 +168,17 @@ def test_corner(thresh, index, expected):
   vals = (1, 3)
   layer = vals[0] * jnp.ones((2, 2 * xx, 2 * yy))
   layer = layer.at[1, thresh[0]:, thresh[1]:].set(vals[1])
-  out = layers.render(layer,
-                      jnp.array([thresh[2]]),
-                      jnp.arange(zz)[:, None] + jnp.array([[-0.5, 0]]),
-                      jnp.arange(zz)[:, None] + jnp.array([[0.5, 1]]),
-                      m=1)
+  out = pjz.render(layer,
+                   jnp.array([thresh[2]]),
+                   jnp.arange(zz)[:, None] + jnp.array([[-0.5, 0]]),
+                   jnp.arange(zz)[:, None] + jnp.array([[0.5, 1]]),
+                   m=1)
   assert out[index] == pytest.approx(expected)
 
 
 def test_differentiable():
   xx, yy, zz = 2, 2, 2
-  grad = jax.grad(lambda *args: jnp.sum(layers.render(*args)), (0, 1))
+  grad = jax.grad(lambda *args: jnp.sum(pjz.render(*args)), (0, 1))
   layer_grad, pos_grad = grad(jnp.ones((2, 2 * xx, 2 * yy)),
                               jnp.array([1.0]),
                               jnp.arange(zz)[:, None] + jnp.array([[-0.5, 0]]),

@@ -1,4 +1,4 @@
-from pjz import layers, modes, shapes
+import pjz
 
 import jax.numpy as jnp
 import numpy as np
@@ -8,11 +8,11 @@ import pytest
 def get_beta_xy(i, x, y):
   xx, yy = 30, 20
   pos = (np.arange(2 * xx)[:, None], np.arange(2 * yy))
-  eps = 1 + 12.25 * shapes.rect(pos, (xx + x, yy + y), (25, 10))
-  epsilon = layers.render(eps[None, :, :], np.array([]),
-                          np.zeros((1, 2)), np.ones((1, 2)), m=1)
-  beta, _ = modes.waveguide(i, 2 * np.pi / 37, np.array(epsilon[:, :, :, 0]),
-                            np.ones((xx, 2)), np.ones((yy, 2)))
+  eps = 1 + 12.25 * pjz.rect(pos, (xx + x, yy + y), (25, 10))
+  epsilon = pjz.render(eps[None, :, :], np.array([]),
+                       np.zeros((1, 2)), np.ones((1, 2)), m=1)
+  beta, _ = pjz.waveguide(i, 2 * np.pi / 37, np.array(epsilon[:, :, :, 0]),
+                          np.ones((xx, 2)), np.ones((yy, 2)))
   return beta
 
 
@@ -30,12 +30,12 @@ def get_beta_xz(i, x, z):
   xx, yy, zz = 30, 1, 20
   pos = (np.arange(2 * xx)[:, None], np.arange(2 * yy))
   eps = np.ones((3, 2 * xx, 2 * yy))
-  eps[1, ...] = 1 + 12.25 * shapes.rect(pos, (xx + x, yy), (25, np.inf))
-  epsilon = layers.render(eps, np.array([7.5, 12.5]) + z,
-                          np.arange(zz)[:, None] + [-0.5, 0],
-                          np.arange(zz)[:, None] + [0.5, 1.0], m=1)
-  beta, _ = modes.waveguide(i, 2 * np.pi / 37, np.array(epsilon[:, :, 0, :]),
-                            np.ones((xx, 2)), np.ones((zz, 2)))
+  eps[1, ...] = 1 + 12.25 * pjz.rect(pos, (xx + x, yy), (25, np.inf))
+  epsilon = pjz.render(eps, np.array([7.5, 12.5]) + z,
+                       np.arange(zz)[:, None] + [-0.5, 0],
+                       np.arange(zz)[:, None] + [0.5, 1.0], m=1)
+  beta, _ = pjz.waveguide(i, 2 * np.pi / 37, np.array(epsilon[:, :, 0, :]),
+                          np.ones((xx, 2)), np.ones((zz, 2)))
   return beta
 
 
