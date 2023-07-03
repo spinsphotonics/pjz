@@ -10,46 +10,48 @@ a set of for runnning photonic simulation and optimization workflows at scale.
 
 .. automodule:: pjz
 
-Simulation
-----------
+.. autofunction:: pml_sigma
 
-.. autosummary::
-  :toctree: _autosummary
-
-    absorption_mask
-    pml_sigma
-    scatter
-
-Input/output
-------------
-
-.. autosummary::
-  :toctree: _autosummary
-
-    waveguide
-
-Structural
-----------
-
-.. autosummary::
-  :toctree: _autosummary
-
-    invert
-    union
-    intersect
-    rect
-    circ
-    render
-
-Time/frequency
---------------
-
-.. autosummary::
-  :toctree: _autosummary
-
-    ramped_sin
-    sampling_interval
-    frequency_components
+.. Simulation
+.. ----------
+.. 
+.. .. autosummary::
+..   :toctree: _autosummary
+.. 
+..     absorption_mask
+..     pml_sigma
+..     scatter
+.. 
+.. Input/output
+.. ------------
+.. 
+.. .. autosummary::
+..   :toctree: _autosummary
+.. 
+..     waveguide
+.. 
+.. Structural
+.. ----------
+.. 
+.. .. autosummary::
+..   :toctree: _autosummary
+.. 
+..     invert
+..     union
+..     intersect
+..     rect
+..     circ
+..     render
+.. 
+.. Time/frequency
+.. --------------
+.. 
+.. .. autosummary::
+..   :toctree: _autosummary
+.. 
+..     ramped_sin
+..     sampling_interval
+..     frequency_components
 
 Developer notes 
 ---------------

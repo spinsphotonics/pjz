@@ -24,14 +24,11 @@ author = 'SPINS Photonics'
 
 extensions = [
     'sphinx.ext.autodoc',
-    'sphinx.ext.autosummary',
     'sphinx.ext.doctest',
 ]
 
 templates_path = ['_templates']
 exclude_patterns = ['_build', 'Thumbs.db', '.DS_Store']
-
-autosummary_generate = True
 
 autodoc_mock_imports = ["fdtdz_jax", "jax", "numpy", "scipy"]
 
