@@ -9,7 +9,8 @@ import os
 import pathlib
 import sys
 
-sys.path.insert(0, pathlib.Path(__file__).parents[2].resolve().as_posix())
+sys.path.insert(0, os.path.join(pathlib.Path(
+    __file__).parents[2].resolve().as_posix(), ""))
 
 # -- Project information -----------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#project-information
