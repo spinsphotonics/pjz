@@ -39,4 +39,12 @@ autodoc_mock_imports = ["fdtdz_jax", "jax", "numpy", "scipy"]
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#options-for-html-output
 
 html_theme = 'sphinx_book_theme'
-html_static_path = ['_static']
+
+# Theme options are theme-specific and customize the look and feel of a theme
+# further.  For a list of options available for each theme, see the
+# documentation.
+html_theme_options = {
+    'show_toc_level': 2,
+    'repository_url': 'https://github.com/spinsphotonics/pjz',
+    'use_repository_button': True,     # add a "link to repository" button
+}
