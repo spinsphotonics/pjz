@@ -281,6 +281,14 @@ document.write(`
                 <ul class="visible nav section-nav flex-column">
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#simulation">Simulation</a><ul class="visible nav section-nav flex-column">
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#pjz.scatter"><code class="docutils literal notranslate"><span class="pre">scatter()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#pjz.Port"><code class="docutils literal notranslate"><span class="pre">Port</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#pjz.Port.field"><code class="docutils literal notranslate"><span class="pre">Port.field</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#pjz.Port.wavevector"><code class="docutils literal notranslate"><span class="pre">Port.wavevector</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#pjz.Port.position"><code class="docutils literal notranslate"><span class="pre">Port.position</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#pjz.Port.is_input"><code class="docutils literal notranslate"><span class="pre">Port.is_input</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#pjz.Port.is_output"><code class="docutils literal notranslate"><span class="pre">Port.is_output</span></code></a></li>
+</ul>
+</li>
 </ul>
 </li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#developer-notes">Developer notes</a></li>
@@ -305,19 +313,27 @@ a set of for runnning photonic simulation and optimization workflows at scale.</
 <h2>Simulation<a class="headerlink" href="#simulation" title="Permalink to this heading">#</a></h2>
 <dl class="py function">
 <dt class="sig sig-object py" id="pjz.scatter">
-<span class="sig-prename descclassname"><span class="pre">pjz.</span></span><span class="sig-name descname"><span class="pre">scatter</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">epsilon</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ports</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dt</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">input_waveform</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">output_steps</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">output_coeffs</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">launch_params</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">absorption_padding</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">40</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">absorption_coeff</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.01</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pml_widths</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">(8,</span> <span class="pre">8)</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pml_alpha_coeff</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.05</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pml_sigma_lnr</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">16.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pml_sigma_m</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">4.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">use_reduced_precision</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pjz.scatter" title="Permalink to this definition">#</a></dt>
+<span class="sig-prename descclassname"><span class="pre">pjz.</span></span><span class="sig-name descname"><span class="pre">scatter</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">epsilon</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ports</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">input_waveform</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">output_coeffs</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">compress_batch_dims</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dt</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">output_steps</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">launch_params</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">absorption_padding</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">40</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">absorption_coeff</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.01</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pml_widths</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">(8,</span> <span class="pre">8)</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pml_alpha_coeff</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.05</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pml_sigma_lnr</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">16.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pml_sigma_m</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">4.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">use_reduced_precision</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pjz.scatter" title="Permalink to this definition">#</a></dt>
 <dd><p>Computes scattering parameters, differentiable.</p>
+<p>Note that this uses the average of the <code class="docutils literal notranslate"><span class="pre">ww</span></code> dimension of <code class="docutils literal notranslate"><span class="pre">ports[i].field</span></code>
+as individual excitations…</p>
+<p>Sounds like some pmap or vmap should be able to be used here??</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>epsilon</strong> – <code class="docutils literal notranslate"><span class="pre">(3,</span> <span class="pre">xx,</span> <span class="pre">yy,</span> <span class="pre">zz)</span></code> array of permittivity values.</p></li>
-<li><p><strong>ports</strong> – List of <code class="docutils literal notranslate"><span class="pre">pp</span></code> ports as returned by <code class="docutils literal notranslate"><span class="pre">scatterport()</span></code>.</p></li>
+<li><p><strong>epsilon</strong> – Array of permittivity values where
+<code class="docutils literal notranslate"><span class="pre">epsilon.shape[-4:]</span> <span class="pre">==</span> <span class="pre">(3,</span> <span class="pre">xx,</span> <span class="pre">yy,</span> <span class="pre">zz)</span></code>.</p></li>
+<li><p><strong>ports</strong> – List of <code class="docutils literal notranslate"><span class="pre">Port</span></code> objects.</p></li>
+<li><p><strong>input_waveform</strong> – Source excitation coefficients with
+<code class="docutils literal notranslate"><span class="pre">input_waveform.shape[-1]</span> <span class="pre">==</span> <span class="pre">tt</span></code>.</p></li>
+<li><p><strong>output_transform</strong> – Complex-valued array with
+<code class="docutils literal notranslate"><span class="pre">output_transform.shape[-2:]</span> <span class="pre">==</span> <span class="pre">(vv,</span> <span class="pre">ww)</span></code> used to convert <code class="docutils literal notranslate"><span class="pre">vv</span></code>
+temporal output snapshots to <code class="docutils literal notranslate"><span class="pre">ww</span></code> field patterns.</p></li>
+<li><p><strong>compress_batch_dims</strong> – Tuple of batch dimensions across <code class="docutils literal notranslate"><span class="pre">epsilon</span></code>,
+<code class="docutils literal notranslate"><span class="pre">ports[i].field</span></code>, and <code class="docutils literal notranslate"><span class="pre">input_waveform</span></code> to run as a single simulation.</p></li>
 <li><p><strong>dt</strong> – (Dimensionless) time step, see <code class="docutils literal notranslate"><span class="pre">fdtdz_jax.fdtdz()</span></code> documentation.</p></li>
-<li><p><strong>input_waveform</strong> – <code class="docutils literal notranslate"><span class="pre">(tt,)</span></code> array of source excitation coefficients.</p></li>
 <li><p><strong>output_steps</strong> – <code class="docutils literal notranslate"><span class="pre">(start,</span> <span class="pre">stop,</span> <span class="pre">step)</span></code> tuple of integers denoting update
 steps at which to output fields.</p></li>
-<li><p><strong>output_coeffs</strong> – <code class="docutils literal notranslate"><span class="pre">(vv,</span> <span class="pre">ww)</span></code> complex-valued array used to linearly transform
-<code class="docutils literal notranslate"><span class="pre">vv</span></code> temporal output snapshots to <code class="docutils literal notranslate"><span class="pre">ww</span></code> field patterns.</p></li>
 <li><p><strong>launch_params</strong> – See <code class="docutils literal notranslate"><span class="pre">fdtdz_jax.fdtdz()</span></code> documentation.</p></li>
 <li><p><strong>absorption_padding</strong> – Padding cells to add along both coundaries of the x- and
 y-axes for adiabatic absorption boundary conditions.</p></li>
@@ -330,10 +346,57 @@ y-axes for adiabatic absorption boundary conditions.</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
-<dd class="field-even"><p><code class="docutils literal notranslate"><span class="pre">(mm,</span> <span class="pre">nn,</span> <span class="pre">ww)</span></code> array of complex-valued scattering matrix coefficients for
-<code class="docutils literal notranslate"><span class="pre">mm</span></code> input and <code class="docutils literal notranslate"><span class="pre">nn</span></code> output ports.</p>
+<dd class="field-even"><p>Array of complex-valued scattering matrix coefficients with
+<code class="docutils literal notranslate"><span class="pre">shape[:-2]</span></code> equal to <code class="docutils literal notranslate"><span class="pre">epsilon</span></code>, <code class="docutils literal notranslate"><span class="pre">ports[i].field</span></code>, <code class="docutils literal notranslate"><span class="pre">input_waveform</span></code>,
+and <code class="docutils literal notranslate"><span class="pre">output_transform</span></code> batch dimensions broadcast together and
+<code class="docutils literal notranslate"><span class="pre">shape[-2:]</span> <span class="pre">==</span> <span class="pre">(mm,</span> <span class="pre">nn)</span></code> for <code class="docutils literal notranslate"><span class="pre">mm</span></code> input and <code class="docutils literal notranslate"><span class="pre">nn</span></code> output ports.</p>
 </dd>
 </dl>
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="pjz.Port">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">pjz.</span></span><span class="sig-name descname"><span class="pre">Port</span></span><a class="headerlink" href="#pjz.Port" title="Permalink to this definition">#</a></dt>
+<dd><p>Input/output port for <code class="docutils literal notranslate"><span class="pre">scatter()</span></code>.</p>
+<p>Note that this also supports a “point” source, but the non-point sources must be on a border…</p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="pjz.Port.field">
+<span class="sig-name descname"><span class="pre">field</span></span><a class="headerlink" href="#pjz.Port.field" title="Permalink to this definition">#</a></dt>
+<dd><p>Array of field values where <code class="docutils literal notranslate"><span class="pre">field.shape[-4:]</span> <span class="pre">==</span> <span class="pre">(3,</span> <span class="pre">xx,</span> <span class="pre">yy,</span> <span class="pre">zz)</span></code>.
+For compatibility with <code class="docutils literal notranslate"><span class="pre">fdtdz_jax.fdtdz()</span></code>, which only implements source
+fields in a plane, the elements at <code class="docutils literal notranslate"><span class="pre">(...</span> <span class="pre">,</span> <span class="pre">i,</span> <span class="pre">:,</span> <span class="pre">:,</span> <span class="pre">:)</span></code> must be non-zero
+for <code class="docutils literal notranslate"><span class="pre">i</span></code> corresponding to one of either <code class="docutils literal notranslate"><span class="pre">xx</span></code>, <code class="docutils literal notranslate"><span class="pre">yy</span></code>, or <code class="docutils literal notranslate"><span class="pre">zz</span></code> being
+set to <code class="docutils literal notranslate"><span class="pre">1</span></code>.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="pjz.Port.wavevector">
+<span class="sig-name descname"><span class="pre">wavevector</span></span><a class="headerlink" href="#pjz.Port.wavevector" title="Permalink to this definition">#</a></dt>
+<dd><p>Array of wavevector values corresponding with
+<code class="docutils literal notranslate"><span class="pre">wavevector.shape</span> <span class="pre">==</span> <span class="pre">field.shape[:-4]</span></code>.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="pjz.Port.position">
+<span class="sig-name descname"><span class="pre">position</span></span><a class="headerlink" href="#pjz.Port.position" title="Permalink to this definition">#</a></dt>
+<dd><p><code class="docutils literal notranslate"><span class="pre">(x0,</span> <span class="pre">y0,</span> <span class="pre">z0)</span></code> tuple denoting port position. Values of
+<code class="docutils literal notranslate"><span class="pre">+jax.np.inf</span></code> and <code class="docutils literal notranslate"><span class="pre">-jax.np.inf</span></code> are used to denote a position on a
+boundary. Fields are understood to be extend from indices <code class="docutils literal notranslate"><span class="pre">(x0,</span> <span class="pre">y0,</span> <span class="pre">z0)</span></code>
+to <code class="docutils literal notranslate"><span class="pre">(x0</span> <span class="pre">+</span> <span class="pre">xx</span> <span class="pre">-</span> <span class="pre">1,</span> <span class="pre">y0</span> <span class="pre">+</span> <span class="pre">yy</span> <span class="pre">-</span> <span class="pre">1,</span> <span class="pre">z0</span> <span class="pre">+</span> <span class="pre">zz</span> <span class="pre">-</span> <span class="pre">1)</span></code> inclusive.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="pjz.Port.is_input">
+<span class="sig-name descname"><span class="pre">is_input</span></span><a class="headerlink" href="#pjz.Port.is_input" title="Permalink to this definition">#</a></dt>
+<dd><p>If <cite>True</cite>, denotes an input port.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="pjz.Port.is_output">
+<span class="sig-name descname"><span class="pre">is_output</span></span><a class="headerlink" href="#pjz.Port.is_output" title="Permalink to this definition">#</a></dt>
+<dd><p>If <cite>True</cite>, denotes an output port.</p>
+</dd></dl>
+
 </dd></dl>
 
 </section>
@@ -374,6 +437,14 @@ y-axes for adiabatic absorption boundary conditions.</p></li>
     <ul class="visible nav section-nav flex-column">
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#simulation">Simulation</a><ul class="visible nav section-nav flex-column">
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#pjz.scatter"><code class="docutils literal notranslate"><span class="pre">scatter()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#pjz.Port"><code class="docutils literal notranslate"><span class="pre">Port</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#pjz.Port.field"><code class="docutils literal notranslate"><span class="pre">Port.field</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#pjz.Port.wavevector"><code class="docutils literal notranslate"><span class="pre">Port.wavevector</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#pjz.Port.position"><code class="docutils literal notranslate"><span class="pre">Port.position</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#pjz.Port.is_input"><code class="docutils literal notranslate"><span class="pre">Port.is_input</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#pjz.Port.is_output"><code class="docutils literal notranslate"><span class="pre">Port.is_output</span></code></a></li>
+</ul>
+</li>
 </ul>
 </li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#developer-notes">Developer notes</a></li>

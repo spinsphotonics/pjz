@@ -14,6 +14,8 @@ Simulation
 ----------
 .. autofunction:: scatter
 
+.. autoclass:: Port
+
 .. 
 .. .. autosummary::
 ..   :toctree: _autosummary

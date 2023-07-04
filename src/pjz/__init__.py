@@ -2,6 +2,7 @@ from .pjz_version import version as __version__
 
 from .simulation import (
     scatter,
+    Port,
 )
 # from .boundaries import (
 #     absorption_mask,
