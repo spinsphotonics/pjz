@@ -10,10 +10,10 @@ a set of for runnning photonic simulation and optimization workflows at scale.
 
 .. automodule:: pjz
 
-.. autofunction:: pml_sigma
+Simulation
+----------
+.. autofunction:: scatter
 
-.. Simulation
-.. ----------
 .. 
 .. .. autosummary::
 ..   :toctree: _autosummary

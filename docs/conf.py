@@ -25,6 +25,7 @@ author = 'SPINS Photonics'
 extensions = [
     'sphinx.ext.autodoc',
     'sphinx.ext.doctest',
+    'sphinx.ext.napoleon',
 ]
 
 templates_path = ['_templates']
