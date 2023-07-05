@@ -1,9 +1,32 @@
 from .pjz_version import version as __version__
 
-from .simulation import (
+from .solve import (
     scatter,
-    Port,
 )
+
+from .ports import (
+    Port,
+    waveguide_port,
+)
+
+from .freq import (
+    ramped_sin,
+    sampling_interval,
+    output_transform,
+)
+
+from .struct import (
+    rect,
+    circ,
+    invert,
+    union,
+    intersect,
+    dilate,
+    shift,
+    render_layers,
+)
+
+
 # from .boundaries import (
 #     absorption_mask,
 #     pml_sigma,

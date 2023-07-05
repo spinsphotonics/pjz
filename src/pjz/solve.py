@@ -1,25 +1,29 @@
-"""Simulation."""
+"""Solve Maxwell's equations."""
 
-from typing import NamedTuple
+from . import ports
+
+import jax
+
+from typing import List, Tuple
 
 
 def scatter(
-    epsilon,
-    ports,
-    input_waveform,
-    output_coeffs,
-    compress_batch_dims,
-    dt,
-    output_steps,
-    launch_params,
-    absorption_padding=40,
-    absorption_coeff=1e-2,
-    pml_widths=(8, 8),
-    pml_alpha_coeff=0.05,
-    pml_sigma_lnr=16.0,
-    pml_sigma_m=4.0,
-    use_reduced_precision=True,
-):
+    epsilon: jax.Array,
+    ports: List[ports.Port],
+    input_waveform: jax.Array,
+    output_coeffs: jax.Array,
+    compress_batch_dims: Tuple[int, ...],
+    dt: float,
+    output_steps: Tuple[int, int, int],
+    launch_params: Tuple[Tuple[int, int], Tuple[int, int], int, Tuple[int, int]],
+    absorption_padding: int = 40,
+    absorption_coeff: float = 1e-2,
+    pml_widths: Tuple[int, int] = (8, 8),
+    pml_alpha_coeff: float = 0.05,
+    pml_sigma_lnr: float = 16.0,
+    pml_sigma_m: float = 4.0,
+    use_reduced_precision: bool = True,
+) -> jax.Array:
   """Computes scattering parameters, differentiable.
 
   Note that this uses the average of the ``ww`` dimension of ``ports[i].field``
@@ -59,43 +63,3 @@ def scatter(
 
   """
   pass
-
-
-class Port(NamedTuple):
-  """Input/output port for ``scatter()``.
-
-  Note that this also supports a "point" source, but the non-point sources must be on a border...
-
-
-  Attributes:
-    field: Array of field values where ``field.shape[-4:] == (3, xx, yy, zz)``.
-      For compatibility with ``fdtdz_jax.fdtdz()``, which only implements source
-      fields in a plane, the elements at ``(... , i, :, :, :)`` must be non-zero
-      for ``i`` corresponding to one of either ``xx``, ``yy``, or ``zz`` being
-      set to ``1``.
-    wavevector: Array of wavevector values corresponding with
-      ``wavevector.shape == field.shape[:-4]``.
-    position: ``(x0, y0, z0)`` tuple denoting port position. Values of
-      ``+jax.np.inf`` and ``-jax.np.inf`` are used to denote a position on a
-      boundary. Fields are understood to be extend from indices ``(x0, y0, z0)``
-      to ``(x0 + xx - 1, y0 + yy - 1, z0 + zz - 1)`` inclusive.
-    is_input: If `True`, denotes an input port.
-    is_output: If `True`, denotes an output port.
-
-  """
-  pass
-
-
-def scatterport(
-    omega,
-    epsilon,
-    omega_ref,
-    epsilon_ref,
-    center,
-    width,
-    is_input=False,
-    is_output=False,
-    subspace_iters=5,
-):
-  """Same as 
-  """
