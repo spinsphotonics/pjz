@@ -2,7 +2,7 @@
 
 import jax
 
-from typing import Any, NamedTuple, Tuple
+from typing import Any, NamedTuple, Optional, Tuple
 
 
 class Port(NamedTuple):
@@ -37,12 +37,13 @@ class Port(NamedTuple):
 def waveguide_port(
         epsilon: jax.Array,
         omega: jax.Array,
-        epsilon_ref: jax.Array,
-        omega_ref: jax.Array,
         position: Tuple[Any, Any, Any],
         width: Tuple[int, int, int],
         mode_order: int,
-        subspace_iters: int = 10,
+        lobpcg_init_fields: Optional[jax.Array] = None,
+        lobpcg_max_iters: int = 100,
+        lobpcg_tol: Optional[float] = None,
+        reference_fields: Optional[jax.Array] = None,
         is_input: bool = False,
         is_output: bool = False,
 ) -> Port:
@@ -52,16 +53,16 @@ def waveguide_port(
     epsilon: Array of current permittivity values with
       ``epsilon.shape[-4:] == (3, xx, yy, zz)``.
     omega: Array of angular frequencies at which to solve for waveguide modes.
-    epsilon_ref: Static, reference version of ``epsilon``.
-    omega_ref: Static, reference version of ``omega``.
     position: ``(x0, y0, z0)`` position for computing modes within ``epsilon``.
     width: ``(xx, yy, zz)`` number of cells in which to form a window to compute
       mode fields. Mode computation will occur within cell indices within
       `(x0, y0, z0)` to `(x0 + xx - 1, y0 + yy - 1, z0 + zz - 1)` inclusive.
     mode_order: Positive integer denoting mode number to solve for, where the
       fundamental mode corresponds to ``mode_order == 1``.
-    subspace_iters: Number of subspace iterations to tune reference modes to
-      ``epsilon`` and ``omega``.
+    lobpcg_init_fields: ``Port.field`` array to use as initial search
+      directions in the underlying LOBPCG call.
+    lobpcg_max_iters: Maximum number of iterations for underlying LOBPCG call.
+    lobpcg_tol: Error threshold for underlying LOBPCG call.
     is_input: See ``Port.is_input``.
     is_output: See ``Port.is_output``.
 
