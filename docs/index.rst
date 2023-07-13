@@ -11,23 +11,15 @@ scale.
 
 .. automodule:: pjz
 
-Solve API
----------
 .. autofunction:: scatter
 
-Ports API
----------
-.. autoclass:: Port
-.. autofunction :: waveguide_port
+.. autofunction :: wg_port
+.. autofunction :: wg_port_hot
 
-Frequency API
--------------
 .. autofunction :: ramped_sin
 .. autofunction :: sampling_interval
 .. autofunction :: output_transform
 
-Structure API
--------------
 .. autofunction :: rect
 .. autofunction :: circ 
 .. autofunction :: invert 

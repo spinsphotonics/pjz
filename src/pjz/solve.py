@@ -1,7 +1,5 @@
 """Solve Maxwell's equations."""
 
-from . import ports
-
 import jax
 
 from typing import List, Tuple
@@ -9,7 +7,7 @@ from typing import List, Tuple
 
 def scatter(
     epsilon: jax.Array,
-    ports: List[ports.Port],
+    ports: List[Tuple[jax.Array, jax.Array, Tuple[int, int, int]]],
     input_waveform: jax.Array,
     output_coeffs: jax.Array,
     compress_batch_dims: Tuple[int, ...],
@@ -34,7 +32,9 @@ def scatter(
   Args:
     epsilon: Array of permittivity values where
       ``epsilon.shape[-4:] == (3, xx, yy, zz)``.
-    ports: List of ``Port`` objects.
+    ports: Sequence of ``pp`` tuples of the form
+      ``(excitation, wavevector, position)`` denoting the field profile,
+      wavevector, and ``(x0, y0, z0)`` position of each port.
     input_waveform: Source excitation coefficients with
       ``input_waveform.shape[-1] == tt``.
     output_transform: Complex-valued array with
@@ -56,10 +56,10 @@ def scatter(
     use_reduced_precision: See ``fdtdz_jax.fdtdz()`` documentation.
 
   Returns:
-    Array of complex-valued scattering matrix coefficients with
-    ``shape[:-2]`` equal to ``epsilon``, ``ports[i].field``, ``input_waveform``,
-    and ``output_transform`` batch dimensions broadcast together and 
-    ``shape[-2:] == (mm, nn)`` for ``mm`` input and ``nn`` output ports.
+    Nested list of complex-valued scattering matrix coefficients where
+    ``s[i][j]`` corresponds to scattering from port ``i`` to port ``j``
+    and has shape equal to the batch dimensions of the various input parameters
+    broadcast together.
 
   """
   pass

@@ -2,52 +2,65 @@
 
 import jax
 
-from typing import Any, NamedTuple, Optional, Tuple
+from typing import Any, List, Optional, Tuple
 
 
-class Port(NamedTuple):
-  """Input/output ports.
-
-  Note that this also supports a "point" source, but the non-point sources must be on a border...
+def _forward_difference(arr, axis):
+  return jnp.roll(arr, axis) - arr
 
 
-  Attributes:
-    field: Array of field values where ``field.shape[-4:] == (3, xx, yy, zz)``.
-      For compatibility with ``fdtdz_jax.fdtdz()``, which only implements source
-      fields in a plane, the elements at ``(... , i, :, :, :)`` must be non-zero
-      for ``i`` corresponding to one of either ``xx``, ``yy``, or ``zz`` being
-      set to ``1``.
-    wavevector: Array of wavevector values corresponding with
-      ``wavevector.shape == field.shape[:-4]``.
-    position: ``(x0, y0, z0)`` tuple denoting port position. Values of
-      ``+jax.np.inf`` and ``-jax.np.inf`` are used to denote a position on a
-      boundary. Fields are understood to be extend from indices ``(x0, y0, z0)``
-      to ``(x0 + xx - 1, y0 + yy - 1, z0 + zz - 1)`` inclusive.
-    is_input: If `True`, denotes an input port.
-    is_output: If `True`, denotes an output port.
-
-  """
-  field: jax.Array
-  wavevector: jax.Array
-  position: Tuple[Any, Any, Any]
-  is_input: Any = False
-  is_output: Any = False
+def _dxf(dx, dy):
+  xx, yy = dx.shape[0], dy.shape[0]
+  return sp.diags(
+      [np.repeat(u, yy) for u in (dx[:, 0], -dx[1:, 0], -dx[0, 0])],
+      [i * yy for i in (0, -1, xx - 1)])
 
 
-def waveguide_port(
+def _dx1(dx, dy):
+  xx, yy = dx.shape[0], dy.shape[0]
+  return sp.diags(
+      [np.repeat(u, yy) for u in (dx[:, 1], -dx[:-1, 1], -dx[-1, 1])],
+      [i * yy for i in (0, 1, -(xx - 1))])
+
+
+def _dy0(dx, dy):
+  xx, yy = dx.shape[0], dy.shape[0]
+  return sp.block_diag(
+      [sp.diags((dy[:, 0], -dy[1:, 0], -dy[0, 0]), (0, -1, yy - 1))] * xx)
+
+
+def _dy1(dx, dy):
+  xx, yy = dx.shape[0], dy.shape[0]
+  return sp.block_diag(
+      [sp.diags((dy[:, 1], -dy[:-1, 1], -dy[-1, 1]), (0, 1, -(yy - 1)))] * xx)
+
+
+def _waveguide_operator(omega, epsilon, dx, dy):
+  """Waveguide operator as a sparse scipy matrix."""
+  # Note: We assume row-major -- `flatindex = y + yy * x`.
+  dx0, dx1, dy0, dy1 = _dx0(dx, dy), _dx1(dx, dy), _dy0(dx, dy), _dy1(dx, dy)
+  exy = sp.diags(np.ravel(epsilon[:2]))
+  inv_ez = sp.diags(1 / np.ravel(epsilon[2]))
+  return (omega**2 * exy -
+          sp.vstack([dx1, dy1]) @ inv_ez @ sp.hstack([dx0, dy0]) @ exy -
+          sp.vstack([-dy0, dx0]) @ sp.hstack([-dy1, dx1]))
+
+
+# TODO: Test this with batch dimension?
+def wg_port(
         epsilon: jax.Array,
         omega: jax.Array,
         position: Tuple[Any, Any, Any],
         width: Tuple[int, int, int],
-        mode_order: int,
-        lobpcg_init_fields: Optional[jax.Array] = None,
-        lobpcg_max_iters: int = 100,
-        lobpcg_tol: Optional[float] = None,
-        reference_fields: Optional[jax.Array] = None,
-        is_input: bool = False,
-        is_output: bool = False,
-) -> Port:
+        num_modes: int,
+        shift_iters: int = 10,
+        max_iters: int = 1000000,
+        tol: float = 1e-6,
+) -> List[Tuple[jax.Array, jax.Array, Tuple[int, int, int]]]:
   """Waveguide modes.
+
+  Try to do something so that the excitation is overall positive (what we
+  really want is to have a non-random phase to the excitation values).
 
   Args:
     epsilon: Array of current permittivity values with
@@ -56,18 +69,46 @@ def waveguide_port(
     position: ``(x0, y0, z0)`` position for computing modes within ``epsilon``.
     width: ``(xx, yy, zz)`` number of cells in which to form a window to compute
       mode fields. Mode computation will occur within cell indices within
-      `(x0, y0, z0)` to `(x0 + xx - 1, y0 + yy - 1, z0 + zz - 1)` inclusive.
-    mode_order: Positive integer denoting mode number to solve for, where the
-      fundamental mode corresponds to ``mode_order == 1``.
-    lobpcg_init_fields: ``Port.field`` array to use as initial search
-      directions in the underlying LOBPCG call.
-    lobpcg_max_iters: Maximum number of iterations for underlying LOBPCG call.
-    lobpcg_tol: Error threshold for underlying LOBPCG call.
-    is_input: See ``Port.is_input``.
-    is_output: See ``Port.is_output``.
+      ``(x0, y0, z0)`` to ``(x0 + xx - 1, y0 + yy - 1, z0 + zz - 1)`` inclusive.
+    num_modes: Positive integer denoting the number of modes to solve for.
+    shift_iters: Number of iterations used to determine the largest eigenvalue
+      of the waveguide operator.
+    num_subspace_iters: Maximum number of eigenvalue solver iterations to execute.
+    tol: Error threshold for eigenvalue solver.
 
   Returns:
-    ``Port`` object with ``field`` and ``wavevector`` having batch dimensions
-    derived from the broadcasting of ``epsilon`` and ``omega`` batch dimensions.
+    ``num_modes`` tuples of form ``(excitation, wavevector, position)``, in
+    order of decreasing ``wavevector`` so that the fundamental mode is at
+    index ``0``.
+
+  """
+  pass
+
+
+def wg_port_hot(
+        epsilon: jax.Array,
+        omega: jax.Array,
+        hot_start: List[Tuple[jax.Array, jax.Array, Tuple[int, int, int]]],
+        shift_iters: int = 10,
+        max_iters: int = 1000000,
+        tol: float = 1e-6,
+) -> List[Tuple[jax.Array, jax.Array, Tuple[int, int, int]]]:
+  """Same as ``wg_port()`` but with non-random initial value.
+
+  Say something about this being quicker...
+  Also useful to make sure we don't keep on flipping signs.
+
+  Args:
+    epsilon: Same as ``wg_port()``.
+    omega: Same as ``wg_port()``.
+    hot_start: Use the output from a previous ``wg_port()`` call as an initial
+      starting point.
+    shift_iters: Same as ``wg_port()``. 
+    max_iters: Same as ``wg_port()``. 
+    tol: Same as ``wg_port()``. 
+
+  Returns:
+    Same as ``wg_port()``.
+
   """
   pass

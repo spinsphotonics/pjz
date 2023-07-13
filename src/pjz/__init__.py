@@ -5,8 +5,8 @@ from .solve import (
 )
 
 from .ports import (
-    Port,
-    waveguide_port,
+    wg_port,
+    wg_port_hot,
 )
 
 from .freq import (
