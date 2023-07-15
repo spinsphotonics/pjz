@@ -47,3 +47,5 @@ html_theme_options = {
     'use_repository_button': True,     # add a "link to repository" button
     'nosidebar': True,
 }
+
+html_sidebars = {}

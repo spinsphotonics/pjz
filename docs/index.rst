@@ -29,7 +29,4 @@ scale.
 .. autofunction :: shift
 .. autofunction :: render_layers
 
-Developer notes 
----------------
-
 
