@@ -9,10 +9,10 @@ from typing import Tuple
 
 def ramped_sin(
         omega: jax.Array,
-        dt: float,
+        dt: Union[float, jax.Array],
         tt: int,
-        width: float = 4,
-        delay: float = 4,
+        width: Union[float, jax.Array] = 4,
+        delay: Union[float, jax.Array] = 4,
 ) -> jax.Array:
   """Sine function with a gradual ramp.
 
@@ -25,9 +25,15 @@ def ramped_sin(
     tt: Number of update steps.
     width: Number of periods in ramp-up time.
     delay: Number of periods until mid-ramp.
+
+  Returns:
+    Array with ``shape[-1] == tt`` and ``shape[:-1]`` equal to the input 
+    parameter shapes broadcast together.
+    
   """
-  # t = omega * dt * jnp.arange(tt)
-  # return ((1 + jnp.tanh(t / width - delay)) / 2) * jnp.sin(t)
+  dt, width, delay = [jnp.array(arr)[..., None] for arr in (dt, width, delay)]
+  t = omega[..., None] * dt * jnp.arange(tt)
+  return ((1 + jnp.tanh(t / width - delay)) / 2) * jnp.sin(t)
 
 
 def sampling_interval(

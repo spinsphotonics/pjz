@@ -256,9 +256,7 @@ document.write(`
   </button>
 `);
 </script>
-<label class="sidebar-toggle secondary-toggle btn btn-sm" for="__secondary"title="Toggle secondary sidebar" data-bs-placement="bottom" data-bs-toggle="tooltip">
-    <span class="fa-solid fa-list"></span>
-</label>
+
 </div></div>
       
     </div>
@@ -274,27 +272,6 @@ document.write(`
     <div id="print-main-content">
         <div id="jb-print-toc">
             
-            <div>
-                <h2> Contents </h2>
-            </div>
-            <nav aria-label="Page">
-                <ul class="visible nav section-nav flex-column">
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#pjz.scatter"><code class="docutils literal notranslate"><span class="pre">scatter()</span></code></a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#pjz.wg_port"><code class="docutils literal notranslate"><span class="pre">wg_port()</span></code></a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#pjz.wg_port_hot"><code class="docutils literal notranslate"><span class="pre">wg_port_hot()</span></code></a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#pjz.ramped_sin"><code class="docutils literal notranslate"><span class="pre">ramped_sin()</span></code></a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#pjz.sampling_interval"><code class="docutils literal notranslate"><span class="pre">sampling_interval()</span></code></a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#pjz.output_transform"><code class="docutils literal notranslate"><span class="pre">output_transform()</span></code></a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#pjz.rect"><code class="docutils literal notranslate"><span class="pre">rect()</span></code></a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#pjz.circ"><code class="docutils literal notranslate"><span class="pre">circ()</span></code></a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#pjz.invert"><code class="docutils literal notranslate"><span class="pre">invert()</span></code></a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#pjz.union"><code class="docutils literal notranslate"><span class="pre">union()</span></code></a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#pjz.intersect"><code class="docutils literal notranslate"><span class="pre">intersect()</span></code></a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#pjz.dilate"><code class="docutils literal notranslate"><span class="pre">dilate()</span></code></a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#pjz.shift"><code class="docutils literal notranslate"><span class="pre">shift()</span></code></a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#pjz.render_layers"><code class="docutils literal notranslate"><span class="pre">render_layers()</span></code></a></li>
-</ul>
-            </nav>
         </div>
     </div>
 </div>
@@ -311,192 +288,6 @@ document.write(`
 <a class="reference external" href="https://www.github.com/spinsphotonics/fdtdz">fdtd-z</a>,
 a set of tools for runnning photonic simulation and optimization workflows at
 scale.</p>
-<span class="target" id="module-pjz"></span><dl class="py function">
-<dt class="sig sig-object py" id="pjz.scatter">
-<span class="sig-prename descclassname"><span class="pre">pjz.</span></span><span class="sig-name descname"><span class="pre">scatter</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">epsilon</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">jax.Array</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ports</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">Tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">jax.Array</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">jax.Array</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">int</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">int</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">input_waveform</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">jax.Array</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">output_coeffs</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">jax.Array</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dt</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">output_steps</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">int</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">int</span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">launch_params</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">Tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">int</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">int</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">int</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">int</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">absorption_padding</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">40</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">absorption_coeff</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">0.01</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pml_widths</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">int</span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">(8,</span> <span class="pre">8)</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pml_alpha_coeff</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">0.05</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pml_sigma_lnr</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">16.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pml_sigma_m</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">4.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">use_reduced_precision</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">jax.Array</span></span></span><a class="headerlink" href="#pjz.scatter" title="Permalink to this definition">#</a></dt>
-<dd><p>Computes scattering parameters in a differentiable manner.</p>
-<p><code class="docutils literal notranslate"><span class="pre">scatter()</span></code> wraps the <code class="docutils literal notranslate"><span class="pre">fdtdz_jax.fdtdz()</span></code> and serves as the primary
-interface for <code class="docutils literal notranslate"><span class="pre">pjz</span></code> in the sense that most of the other tools are designed
-to either compute/manipulate the inputs to <code class="docutils literal notranslate"><span class="pre">scatter()</span></code> or else to process
-its outputs.</p>
-<p><code class="docutils literal notranslate"><span class="pre">scatter()</span></code> allows the user to specify the spatial, input/output, and
-temporal dimensions via the <code class="docutils literal notranslate"><span class="pre">epsilon</span></code>, <code class="docutils literal notranslate"><span class="pre">ports</span></code>, and
-<code class="docutils literal notranslate"><span class="pre">input_waveform</span></code>/<code class="docutils literal notranslate"><span class="pre">output_transform</span></code> parameters respectively;
-with the returned scattering parameters intended to be used within loss or
-objective functions for optimization purposes.</p>
-<p>Critically, these parameters also admit leading batch dimensions (which are
-carried on to the output scattering values) that are intended to allow for a
-fuller description of the optimization problem while also allowing for
-parallelization across multiple hosts/GPUs.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>epsilon</strong> – Array of permittivity values where
-<code class="docutils literal notranslate"><span class="pre">epsilon.shape[-4:]</span> <span class="pre">==</span> <span class="pre">(3,</span> <span class="pre">xx,</span> <span class="pre">yy,</span> <span class="pre">zz)</span></code>.</p></li>
-<li><p><strong>ports</strong> – Sequence of <code class="docutils literal notranslate"><span class="pre">pp</span></code> tuples of the form
-<code class="docutils literal notranslate"><span class="pre">(excitation,</span> <span class="pre">wavevector,</span> <span class="pre">position)</span></code> denoting the field profile,
-wavevector, and <code class="docutils literal notranslate"><span class="pre">(x0,</span> <span class="pre">y0,</span> <span class="pre">z0)</span></code> position of each port, where
-<code class="docutils literal notranslate"><span class="pre">excitation.shape[-4:]</span> <span class="pre">==</span> <span class="pre">(2,</span> <span class="pre">xx0,</span> <span class="pre">yy0,</span> <span class="pre">zz0)</span></code> with one of either
-<code class="docutils literal notranslate"><span class="pre">xx0</span></code>, <code class="docutils literal notranslate"><span class="pre">yy0</span></code>, or <code class="docutils literal notranslate"><span class="pre">zz0</span></code> being equal to <code class="docutils literal notranslate"><span class="pre">1</span></code>.</p></li>
-<li><p><strong>input_waveform</strong> – Source excitation coefficients with
-<code class="docutils literal notranslate"><span class="pre">input_waveform.shape[-1]</span> <span class="pre">==</span> <span class="pre">tt</span></code>.</p></li>
-<li><p><strong>output_transform</strong> – Complex-valued array with
-<code class="docutils literal notranslate"><span class="pre">output_transform.shape[-2:]</span> <span class="pre">==</span> <span class="pre">(vv,</span> <span class="pre">ww)</span></code> used to convert <code class="docutils literal notranslate"><span class="pre">vv</span></code>
-temporal output snapshots to <code class="docutils literal notranslate"><span class="pre">ww</span></code> field patterns.</p></li>
-<li><p><strong>dt</strong> – (Dimensionless) time step, see <code class="docutils literal notranslate"><span class="pre">fdtdz_jax.fdtdz()</span></code> documentation.</p></li>
-<li><p><strong>output_steps</strong> – <code class="docutils literal notranslate"><span class="pre">(start,</span> <span class="pre">stop,</span> <span class="pre">step)</span></code> tuple of integers denoting update
-steps at which to output fields.</p></li>
-<li><p><strong>launch_params</strong> – See <code class="docutils literal notranslate"><span class="pre">fdtdz_jax.fdtdz()</span></code> documentation.</p></li>
-<li><p><strong>absorption_padding</strong> – Padding cells to add along both boundaries of the x- and
-y-axes for adiabatic absorption boundary conditions.</p></li>
-<li><p><strong>absorption_strength</strong> – Scaling coefficient for adiabatic absorption boundary.</p></li>
-<li><p><strong>pml_widths</strong> – See <code class="docutils literal notranslate"><span class="pre">fdtdz_jax.fdtdz()</span></code> documentation.</p></li>
-<li><p><strong>pml_alpha_coeff</strong> – Constant value for <code class="docutils literal notranslate"><span class="pre">pml_alpha</span></code> parameter of
-<code class="docutils literal notranslate"><span class="pre">fdtdz_jax.fdtdz()</span></code>.</p></li>
-<li><p><strong>pml_sigma_lnr</strong> – Natural logarithm of PML reflectivity.</p></li>
-<li><p><strong>pml_sigma_m</strong> – Exponent for spatial scaling of PML.</p></li>
-<li><p><strong>use_reduced_precision</strong> – See <code class="docutils literal notranslate"><span class="pre">fdtdz_jax.fdtdz()</span></code> documentation.</p></li>
-</ul>
-</dd>
-<dt class="field-even">Returns<span class="colon">:</span></dt>
-<dd class="field-even"><p>Nested list of complex-valued scattering matrix coefficients where
-<code class="docutils literal notranslate"><span class="pre">s[i][j]</span></code> corresponds to scattering from port <code class="docutils literal notranslate"><span class="pre">i</span></code> to port <code class="docutils literal notranslate"><span class="pre">j</span></code>
-and has shape equal to the batch dimensions of the various input parameters
-broadcast together.</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py function">
-<dt class="sig sig-object py" id="pjz.wg_port">
-<span class="sig-prename descclassname"><span class="pre">pjz.</span></span><span class="sig-name descname"><span class="pre">wg_port</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">epsilon</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">jax.Array</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">omega</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">jax.Array</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">position</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">Any</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Any</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Any</span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">width</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">int</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">int</span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">num_modes</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">shift_iters</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">10</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_iters</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">1000000</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tol</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">1e-06</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">Tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">jax.Array</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">jax.Array</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">int</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">int</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span></span><a class="headerlink" href="#pjz.wg_port" title="Permalink to this definition">#</a></dt>
-<dd><p>Waveguide modes.</p>
-<p>Try to do something so that the excitation is overall positive (what we
-really want is to have a non-random phase to the excitation values).</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>epsilon</strong> – Array of current permittivity values with
-<code class="docutils literal notranslate"><span class="pre">epsilon.shape[-4:]</span> <span class="pre">==</span> <span class="pre">(3,</span> <span class="pre">xx,</span> <span class="pre">yy,</span> <span class="pre">zz)</span></code>.</p></li>
-<li><p><strong>omega</strong> – Array of angular frequencies at which to solve for waveguide modes.</p></li>
-<li><p><strong>position</strong> – <code class="docutils literal notranslate"><span class="pre">(x0,</span> <span class="pre">y0,</span> <span class="pre">z0)</span></code> position for computing modes within <code class="docutils literal notranslate"><span class="pre">epsilon</span></code>.</p></li>
-<li><p><strong>width</strong> – <code class="docutils literal notranslate"><span class="pre">(xx,</span> <span class="pre">yy,</span> <span class="pre">zz)</span></code> number of cells in which to form a window to compute
-mode fields. Mode computation will occur within cell indices within
-<code class="docutils literal notranslate"><span class="pre">(x0,</span> <span class="pre">y0,</span> <span class="pre">z0)</span></code> to <code class="docutils literal notranslate"><span class="pre">(x0</span> <span class="pre">+</span> <span class="pre">xx</span> <span class="pre">-</span> <span class="pre">1,</span> <span class="pre">y0</span> <span class="pre">+</span> <span class="pre">yy</span> <span class="pre">-</span> <span class="pre">1,</span> <span class="pre">z0</span> <span class="pre">+</span> <span class="pre">zz</span> <span class="pre">-</span> <span class="pre">1)</span></code> inclusive.</p></li>
-<li><p><strong>num_modes</strong> – Positive integer denoting the number of modes to solve for.</p></li>
-<li><p><strong>shift_iters</strong> – Number of iterations used to determine the largest eigenvalue
-of the waveguide operator.</p></li>
-<li><p><strong>num_subspace_iters</strong> – Maximum number of eigenvalue solver iterations to execute.</p></li>
-<li><p><strong>tol</strong> – Error threshold for eigenvalue solver.</p></li>
-</ul>
-</dd>
-<dt class="field-even">Returns<span class="colon">:</span></dt>
-<dd class="field-even"><p><code class="docutils literal notranslate"><span class="pre">num_modes</span></code> tuples of form <code class="docutils literal notranslate"><span class="pre">(excitation,</span> <span class="pre">wavevector,</span> <span class="pre">position)</span></code>, in
-order of decreasing <code class="docutils literal notranslate"><span class="pre">wavevector</span></code> so that the fundamental mode is at
-index <code class="docutils literal notranslate"><span class="pre">0</span></code>.</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py function">
-<dt class="sig sig-object py" id="pjz.wg_port_hot">
-<span class="sig-prename descclassname"><span class="pre">pjz.</span></span><span class="sig-name descname"><span class="pre">wg_port_hot</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">epsilon</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">jax.Array</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">omega</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">jax.Array</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">hot_start</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">Tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">jax.Array</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">jax.Array</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">int</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">int</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">shift_iters</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">10</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_iters</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">1000000</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tol</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">1e-06</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">Tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">jax.Array</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">jax.Array</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">int</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">int</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span></span><a class="headerlink" href="#pjz.wg_port_hot" title="Permalink to this definition">#</a></dt>
-<dd><p>Same as <code class="docutils literal notranslate"><span class="pre">wg_port()</span></code> but with non-random initial value.</p>
-<p>Say something about this being quicker…
-Also useful to make sure we don’t keep on flipping signs.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>epsilon</strong> – Same as <code class="docutils literal notranslate"><span class="pre">wg_port()</span></code>.</p></li>
-<li><p><strong>omega</strong> – Same as <code class="docutils literal notranslate"><span class="pre">wg_port()</span></code>.</p></li>
-<li><p><strong>hot_start</strong> – Use the output from a previous <code class="docutils literal notranslate"><span class="pre">wg_port()</span></code> call as an initial
-starting point.</p></li>
-<li><p><strong>shift_iters</strong> – Same as <code class="docutils literal notranslate"><span class="pre">wg_port()</span></code>.</p></li>
-<li><p><strong>max_iters</strong> – Same as <code class="docutils literal notranslate"><span class="pre">wg_port()</span></code>.</p></li>
-<li><p><strong>tol</strong> – Same as <code class="docutils literal notranslate"><span class="pre">wg_port()</span></code>.</p></li>
-</ul>
-</dd>
-<dt class="field-even">Returns<span class="colon">:</span></dt>
-<dd class="field-even"><p>Same as <code class="docutils literal notranslate"><span class="pre">wg_port()</span></code>.</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py function">
-<dt class="sig sig-object py" id="pjz.ramped_sin">
-<span class="sig-prename descclassname"><span class="pre">pjz.</span></span><span class="sig-name descname"><span class="pre">ramped_sin</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">omega</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">jax.Array</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dt</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tt</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">width</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">4</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">delay</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">4</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">jax.Array</span></span></span><a class="headerlink" href="#pjz.ramped_sin" title="Permalink to this definition">#</a></dt>
-<dd><p>Sine function with a gradual ramp.</p>
-<p>Based on MEEP’s continuous source, see
-<a class="reference external" href="https://meep.readthedocs.io/en/latest/FAQ/#why-doesnt-the-continuous-wave-cw-source-produce-an-exact-single-frequency-response">https://meep.readthedocs.io/en/latest/FAQ/#why-doesnt-the-continuous-wave-cw-source-produce-an-exact-single-frequency-response</a></p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>omega</strong> – Array of angular frequencies.</p></li>
-<li><p><strong>dt</strong> – Dimensionless time step.</p></li>
-<li><p><strong>tt</strong> – Number of update steps.</p></li>
-<li><p><strong>width</strong> – Number of periods in ramp-up time.</p></li>
-<li><p><strong>delay</strong> – Number of periods until mid-ramp.</p></li>
-</ul>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py function">
-<dt class="sig sig-object py" id="pjz.sampling_interval">
-<span class="sig-prename descclassname"><span class="pre">pjz.</span></span><span class="sig-name descname"><span class="pre">sampling_interval</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">omega_min</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">omega_max</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">omega_n</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dt</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">int</span></span></span><a class="headerlink" href="#pjz.sampling_interval" title="Permalink to this definition">#</a></dt>
-<dd><p>Sampling interval to observe <cite>n</cite> components within <cite>[wmin, wmax]</cite>.</p>
-</dd></dl>
-
-<dl class="py function">
-<dt class="sig sig-object py" id="pjz.output_transform">
-<span class="sig-prename descclassname"><span class="pre">pjz.</span></span><span class="sig-name descname"><span class="pre">output_transform</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">omega</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">jax.Array</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">steps</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="p"><span class="pre">...</span></span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dt</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">jax.Array</span></span></span><a class="headerlink" href="#pjz.output_transform" title="Permalink to this definition">#</a></dt>
-<dd><p>Output transform.</p>
-</dd></dl>
-
-<dl class="py function">
-<dt class="sig sig-object py" id="pjz.rect">
-<span class="sig-prename descclassname"><span class="pre">pjz.</span></span><span class="sig-name descname"><span class="pre">rect</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">shape</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="p"><span class="pre">...</span></span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">center</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">jax.Array</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">widths</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">jax.Array</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">jax.Array</span></span></span><a class="headerlink" href="#pjz.rect" title="Permalink to this definition">#</a></dt>
-<dd><p>Rectangle.</p>
-</dd></dl>
-
-<dl class="py function">
-<dt class="sig sig-object py" id="pjz.circ">
-<span class="sig-prename descclassname"><span class="pre">pjz.</span></span><span class="sig-name descname"><span class="pre">circ</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">shape</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="p"><span class="pre">...</span></span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">center</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">jax.Array</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">radius</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">jax.Array</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">jax.Array</span></span></span><a class="headerlink" href="#pjz.circ" title="Permalink to this definition">#</a></dt>
-<dd><p>Circle.</p>
-</dd></dl>
-
-<dl class="py function">
-<dt class="sig sig-object py" id="pjz.invert">
-<span class="sig-prename descclassname"><span class="pre">pjz.</span></span><span class="sig-name descname"><span class="pre">invert</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">a</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pjz.invert" title="Permalink to this definition">#</a></dt>
-<dd></dd></dl>
-
-<dl class="py function">
-<dt class="sig sig-object py" id="pjz.union">
-<span class="sig-prename descclassname"><span class="pre">pjz.</span></span><span class="sig-name descname"><span class="pre">union</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">a</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">b</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pjz.union" title="Permalink to this definition">#</a></dt>
-<dd></dd></dl>
-
-<dl class="py function">
-<dt class="sig sig-object py" id="pjz.intersect">
-<span class="sig-prename descclassname"><span class="pre">pjz.</span></span><span class="sig-name descname"><span class="pre">intersect</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">a</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">b</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pjz.intersect" title="Permalink to this definition">#</a></dt>
-<dd></dd></dl>
-
-<dl class="py function">
-<dt class="sig sig-object py" id="pjz.dilate">
-<span class="sig-prename descclassname"><span class="pre">pjz.</span></span><span class="sig-name descname"><span class="pre">dilate</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">a</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">jax.Array</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">radius</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">jax.Array</span></span></span><a class="headerlink" href="#pjz.dilate" title="Permalink to this definition">#</a></dt>
-<dd><p>Dilate</p>
-</dd></dl>
-
-<dl class="py function">
-<dt class="sig sig-object py" id="pjz.shift">
-<span class="sig-prename descclassname"><span class="pre">pjz.</span></span><span class="sig-name descname"><span class="pre">shift</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">a</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">jax.Array</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">axis</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">distance</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">jax.Array</span></span></span><a class="headerlink" href="#pjz.shift" title="Permalink to this definition">#</a></dt>
-<dd><p>Shift.</p>
-</dd></dl>
-
-<dl class="py function">
-<dt class="sig sig-object py" id="pjz.render_layers">
-<span class="sig-prename descclassname"><span class="pre">pjz.</span></span><span class="sig-name descname"><span class="pre">render_layers</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">layers</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">jax.Array</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">interface_positions</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">jax.Array</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">magnification</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">jax.Array</span></span></span><a class="headerlink" href="#pjz.render_layers" title="Permalink to this definition">#</a></dt>
-<dd></dd></dl>
-
 </section>
 
 
@@ -520,33 +311,6 @@ starting point.</p></li>
             </div>
             
             
-              
-                <div class="bd-sidebar-secondary bd-toc"><div class="sidebar-secondary-items sidebar-secondary__inner">
-
-  <div class="sidebar-secondary-item">
-  <div class="page-toc tocsection onthispage">
-    <i class="fa-solid fa-list"></i> Contents
-  </div>
-  <nav class="bd-toc-nav page-toc">
-    <ul class="visible nav section-nav flex-column">
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#pjz.scatter"><code class="docutils literal notranslate"><span class="pre">scatter()</span></code></a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#pjz.wg_port"><code class="docutils literal notranslate"><span class="pre">wg_port()</span></code></a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#pjz.wg_port_hot"><code class="docutils literal notranslate"><span class="pre">wg_port_hot()</span></code></a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#pjz.ramped_sin"><code class="docutils literal notranslate"><span class="pre">ramped_sin()</span></code></a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#pjz.sampling_interval"><code class="docutils literal notranslate"><span class="pre">sampling_interval()</span></code></a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#pjz.output_transform"><code class="docutils literal notranslate"><span class="pre">output_transform()</span></code></a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#pjz.rect"><code class="docutils literal notranslate"><span class="pre">rect()</span></code></a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#pjz.circ"><code class="docutils literal notranslate"><span class="pre">circ()</span></code></a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#pjz.invert"><code class="docutils literal notranslate"><span class="pre">invert()</span></code></a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#pjz.union"><code class="docutils literal notranslate"><span class="pre">union()</span></code></a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#pjz.intersect"><code class="docutils literal notranslate"><span class="pre">intersect()</span></code></a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#pjz.dilate"><code class="docutils literal notranslate"><span class="pre">dilate()</span></code></a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#pjz.shift"><code class="docutils literal notranslate"><span class="pre">shift()</span></code></a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#pjz.render_layers"><code class="docutils literal notranslate"><span class="pre">render_layers()</span></code></a></li>
-</ul>
-  </nav></div>
-
-</div></div>
               
             
           </div>
