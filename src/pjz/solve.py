@@ -9,10 +9,12 @@ import numpy as np
 
 
 def _zz(pml_widths, use_reduced_precision):
+  """Height of fdtdz simulation domain."""
   return (128 if use_reduced_precision else 64) - sum(pml_widths)
 
 
 def _pad_zz(epsilon_zz, pml_widths, use_reduced_precision):
+  """Amount of padding needed in z-direction to fill-out fdtdz domain."""
   zz = _zz(pml_widths, use_reduced_precision)
   bot = (zz - epsilon_zz) // 2
   top = zz - epsilon_zz - bot
@@ -44,6 +46,7 @@ def _absorption_mask(xx, yy, width, smoothness):
 
 
 def _safe_div(x, y):
+  """Division where divide-by-zero yields ``0``."""
   return jnp.zeros_like(x) if y == 0 else x / y
 
 
@@ -95,7 +98,7 @@ def _output_phases(
     output_steps: Tuple[int, ...],
     dt: float,
 ) -> jax.Array:
-  """Returns E-field at `omega` for simulation output `out` at `steps`."""
+  """Output phases for angular frequencies ``omega`` at ``output_steps``."""
   steps = jnp.arange(*output_steps)
   theta = omega[:, None] * dt * steps
   return jnp.concatenate([jnp.cos(theta), -jnp.sin(theta)], axis=0)
