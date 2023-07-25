@@ -11,14 +11,16 @@ scale.
 
 .. automodule:: pjz
 
-.. autofunction:: scatter
+Main API
+--------
 
-.. autofunction :: wg_port
-.. autofunction :: wg_port_hot
+.. autofunction:: field_solve
+.. autofunction :: mode_solve
+.. autofunction :: render_layers
 
-.. autofunction :: ramped_sin
-.. autofunction :: sampling_interval
-.. autofunction :: output_transform
+
+Shape functions
+---------------
 
 .. autofunction :: rect
 .. autofunction :: circ 
@@ -27,6 +29,5 @@ scale.
 .. autofunction :: intersect
 .. autofunction :: dilate
 .. autofunction :: shift
-.. autofunction :: render_layers
 
 

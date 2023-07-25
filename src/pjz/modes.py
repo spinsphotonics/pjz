@@ -1,115 +1,255 @@
-"""Modes for finite-difference Yee-cell grids."""
+"""Define inputs and outputs."""
 
-import numpy as np
-import scipy.sparse as sp
+from typing import Any, List, Optional, Tuple
 
-
-def _dx0(dx, dy):
-  xx, yy = dx.shape[0], dy.shape[0]
-  return sp.diags(
-      [np.repeat(u, yy) for u in (dx[:, 0], -dx[1:, 0], -dx[0, 0])],
-      [i * yy for i in (0, -1, xx - 1)])
+import jax
+import jax.numpy as jnp
 
 
-def _dx1(dx, dy):
-  xx, yy = dx.shape[0], dy.shape[0]
-  return sp.diags(
-      [np.repeat(u, yy) for u in (dx[:, 1], -dx[:-1, 1], -dx[-1, 1])],
-      [i * yy for i in (0, 1, -(xx - 1))])
+def _diff(arr, axis, is_forward):
+  if is_forward:
+    return jnp.roll(arr, -1, axis) - arr
+  else:
+    return arr - jnp.roll(arr, 1, axis)
 
 
-def _dy0(dx, dy):
-  xx, yy = dx.shape[0], dy.shape[0]
-  return sp.block_diag(
-      [sp.diags((dy[:, 0], -dy[1:, 0], -dy[0, 0]), (0, -1, yy - 1))] * xx)
+def _operator(epsilon, omega, shift):
+  """Returns the waveguide operator.
+   
+  Args:
+    epsilon: Array with shape ``(..., 3, xx, yy)``.
+    omega: Array.
+    shift: Array.
+  """
+  eps_yx = epsilon[..., (1, 0), :, :, None]
+  eps_z = epsilon[..., 2, :, :, None]
+  omega = omega[..., None, None, None, None]
+  shift = shift[..., None, None, None, None]
+
+  def _apply(v):
+    arr = jnp.reshape(v,
+                      v.shape[:-2] + (2,) + epsilon.shape[-2:] + (v.shape[-1],))
+    a = (omega**2 * eps_yx - shift) * arr
+    b = (-_diff(arr[..., 0, :, :, :], -2, False) +
+         _diff(arr[..., 1, :, :, :], -3, False))
+    b /= eps_z
+    b = jnp.stack([-_diff(b, -2, True), _diff(b, -3, True)], axis=-4)
+    b *= eps_yx
+    c = (_diff(arr[..., 0, :, :, :], -3, True) +
+         _diff(arr[..., 1, :, :, :], -2, True))
+    c = jnp.stack([_diff(c, -3, False), _diff(c, -2, False)], axis=-4)
+    return jnp.reshape(a + b + c, v.shape)
+  return _apply
 
 
-def _dy1(dx, dy):
-  xx, yy = dx.shape[0], dy.shape[0]
-  return sp.block_diag(
-      [sp.diags((dy[:, 1], -dy[:-1, 1], -dy[-1, 1]), (0, 1, -(yy - 1)))] * xx)
-
-
-def _waveguide_operator(omega, epsilon, dx, dy):
-  """Waveguide operator as a sparse scipy matrix."""
-  # Note: We assume row-major -- `flatindex = y + yy * x`.
-  dx0, dx1, dy0, dy1 = _dx0(dx, dy), _dx1(dx, dy), _dy0(dx, dy), _dy1(dx, dy)
-  exy = sp.diags(np.ravel(epsilon[:2]))
-  inv_ez = sp.diags(1 / np.ravel(epsilon[2]))
-  return (omega**2 * exy -
-          sp.vstack([dx1, dy1]) @ inv_ez @ sp.hstack([dx0, dy0]) @ exy -
-          sp.vstack([-dy0, dx0]) @ sp.hstack([-dy1, dx1]))
-
-
-def _find_largest_eigenvalue(A, numsteps):
-  """Estimate dominant eigenvector using power iteration."""
-  v = np.random.rand(A.shape[0])
-  for _ in range(numsteps):
-    v = A @ v
-    v /= np.linalg.norm(v)
-  return v @ A @ v
-
-
-def _conversion_operators(beta, omega, epsilon, dx, dy):
-  """Operators for converting `[Ex, Ey]` to `[Hx, Hy]` and back."""
-  dx0, dx1, dy0, dy1 = _dx0(dx, dy), _dx1(dx, dy), _dy0(dx, dy), _dy1(dx, dy)
-  exy = sp.diags(np.ravel(epsilon[:2]))
-  inv_exy = sp.diags(1 / np.ravel(epsilon[:2]))
-  inv_ez = sp.diags(1 / np.ravel(epsilon[2]))
-  eye = sp.eye(dx.shape[0] * dy.shape[0])
-  foo = sp.bmat([[0 * eye, 1 * eye], [-1 * eye, 0 * eye]])
-  e2h = -(sp.vstack([dy1, -dx1]) @ inv_ez @ sp.hstack([dx0, dy0]) @ exy / beta +
-          beta * foo) / omega
-  h2e = inv_exy @ (sp.vstack([dy0, -dx0]) @ sp.hstack([dx1, dy1]) / beta +
-                   beta * foo) / omega
-  return e2h, h2e
-
-
-def _power_in_mode(emode, beta, omega, epsilon, dx, dy):
-  """Compute poynting vector over `emode`."""
-  e2h, _ = _conversion_operators(beta, omega, epsilon, dx, dy)
-  hmode = np.reshape(e2h @ np.ravel(emode), emode.shape)
-  return np.sum(emode[0] * hmode[1] * (dx[:, 1])[:, None] * dy[:, 0] -
-                emode[1] * hmode[0] * (dx[:, 0])[:, None] * dy[:, 1])
-
-
-def waveguide(i, omega, epsilon, dx, dy):
-  """Solves for the `i`th mode of the waveguide at `omega`.
-
-  Assumes a real-valued structure in the x-y plane and propagation along the
-  z-axis according to `exp(-i * wavevector* z)`. Uses dimensionless units and
-  periodic boundaries.
-
-  Currently does not use JAX and is not differentiable -- waiting on a
-  sparse eigenvalue solver in JAX.
+def _subspace_iteration(op, x, n, tol):
+  """Perform the subspace iteration.
 
   Args:
-    i: Mode number to solve for, where `i = 0` corresponds to the fundamental
-      mode of the structure.
-    omega: Angular frequency of the mode.
-    epsilon: `(3, xx, yy)` array of permittivity values for Ex, Ey, and Ez
-      nodes on a finite-difference Yee grid.
-    dx: `(xx, 2)` array of cell sizes in the x-direction. `[:, 0]` values
-      correspond to Ey/Ez components while `[:, 1]` values correspond to
-      Ex components.
-    dy: `(yy, 2)` array similar to `dx` but for cell sizes along `y`.
+    op: ``op(x)`` applies the operator to ``x``.
+    x: ``x.shape[-2:] == (n, k)``.
+    n: Maximum number of iterations.
+    tol: Error threshold.
 
   Returns:
-    wavevector: Real-valued scalar.
-    fields: `(2, xx, yy)` array of real-valued Ex and Ey field values of the
-      mode. Normalized such that the overlap integral with the output field
-      squared is equal to the power in the mode.
+    ``(w, x, iters, err)`` with ``w.shape[-1] == err.shape[-1] == k``.
 
   """
-  A = _waveguide_operator(omega, epsilon, dx, dy)
-  shift = _find_largest_eigenvalue(A, 20)
-  if shift >= 0:
-    raise ValueError("Expected largest eigenvalue to be negative.")
-  w, v = sp.linalg.eigs(A - shift * sp.eye(A.shape[0]), k=i+1, which="LM")
-  beta = np.real(np.sqrt(w[i] + shift))
-  mode = np.reshape(np.real(v[:, i]), (2,) + epsilon.shape[1:])
-  if beta == 0:
-    raise ValueError("No propagating mode found.")
-  mode /= np.linalg.norm(np.ravel(mode), ord=2)
-  mode /= np.sqrt(_power_in_mode(mode, beta, omega, epsilon, dx, dy))
-  return np.float32(beta), np.float32(mode)
+
+  def cond(vals):
+    _, _, _, i, err = vals
+    return jnp.logical_and(i < n, jnp.max(err) > tol)
+
+  def body(vals):
+    w, x, y, i, err = vals
+    x, _ = jnp.linalg.qr(y, mode="reduced")
+    y = op(x)
+    w = jnp.sum(x * y, axis=-2)
+    err = jnp.linalg.norm(y - w[..., None, :] * x, axis=-2)
+    return w, x, y, i + 1, err
+
+  init_shape = x.shape[:-2] + (x.shape[-1],)
+  init_vals = (
+      jnp.zeros(init_shape),
+      x,
+      op(x),
+      jnp.array(0),
+      jnp.inf * jnp.ones(init_shape),
+  )
+  w, x, _, iters, err = jax.lax.while_loop(cond, body, init_vals)
+
+  # Extract eigenvalues and re-order.
+  inds = jnp.flip(jnp.argsort(w, axis=-1), axis=-1)
+  w = jnp.take_along_axis(w, inds, axis=-1)
+  x = jnp.take_along_axis(x, inds[..., None, :], axis=-1)
+  err = jnp.take_along_axis(err, inds, axis=-1)
+  return w, x, err, iters
+
+
+def _slice_axis(width):
+  if width[2] == 1:
+    return "z"
+  elif width[1] == 1:
+    return "y"
+  elif width[0] == 1:
+    return "x"
+  else:
+    raise ValueError("``width`` must have at least one singular dimension.")
+
+
+def _extract_slice(epsilon, p, w, slice_axis):
+  if slice_axis == "z":
+    return epsilon[..., :, p[0]:p[0] + w[0], p[1]:p[1] + w[1], p[2]]
+
+  elif slice_axis == "y":
+    return jnp.swapaxes(
+        epsilon[..., (2, 0, 1), p[0]:p[0] + w[0], p[1], p[2]:p[2] + w[2]],
+        axis1=-2,
+        axis2=-1,
+    )
+
+  elif slice_axis == "x":
+    return epsilon[..., (1, 2, 0), p[0], p[1]:p[1] + w[1], p[2]:p[2] + w[2]]
+
+  else:
+    raise ValueError("Unrecognized ``slice_axis``")
+
+
+def _excitation_form(x, width, slice_axis):
+  if slice_axis == "z":
+    x = jnp.reshape(x, x.shape[:-2] + (2,) + width + (x.shape[-1],))
+
+  elif slice_axis == "y":
+    print(x.shape)
+    x = jnp.reshape(x, x.shape[:-2] + (2,) + width[::-1] + (x.shape[-1],))
+    x = jnp.swapaxes(x[..., (1, 0), :, :, :, :], -4, -2)
+
+  elif slice_axis == "x":
+    x = jnp.reshape(x, x.shape[:-2] + (2,) + width + (x.shape[-1],))
+
+  else:
+    raise ValueError("Unrecognized ``slice_axis``")
+
+  # Swap components for excitation.
+  return x[..., (1, 0), :, :, :, :]
+
+
+def _vector_form(excitation, slice_axis):
+  """Opposite of ``_excitation_form()``."""
+  x = excitation[..., (1, 0), :, :, :, :]
+
+  if slice_axis == "y":
+    x = jnp.swapaxes(x[..., (1, 0), :, :, :, :], -4, -2)
+
+  return jnp.reshape(x, x.shape[:-5] + (-1,) + x.shape[-1:])
+
+
+def _random(epsilon, omega, width, k):
+  batch_dims = jnp.broadcast_shapes(epsilon.shape[:-4], omega.shape)
+  n = 2 * width[0] * width[1] * width[2]
+  return jax.random.uniform(jax.random.PRNGKey(0), batch_dims + (n, k))
+
+
+def wg_port(
+        epsilon: jax.Array,
+        omega: jax.Array,
+        position: Tuple[int, int, int],
+        width: Tuple[int, int, int],
+        num_modes: int,
+        shift_iters: int = 10,
+        max_iters: int = 100000,
+        tol: float = 1e-4,
+):
+  """Waveguide modes.
+
+  Try to do something so that the excitation is overall positive (what we
+  really want is to have a non-random phase to the excitation values).
+
+  Args:
+    epsilon: Array of current permittivity values with
+      ``epsilon.shape[-4:] == (3, xx, yy, zz)``.
+    omega: Array of angular frequencies at which to solve for waveguide modes.
+    position: ``(x0, y0, z0)`` position for computing modes within ``epsilon``.
+    width: ``(wx, wy, wz)`` number of cells in which to form a window to compute
+      mode fields. Mode computation will occur within cell indices within
+      ``(x0, y0, z0)`` to ``(x0 + xx - 1, y0 + yy - 1, z0 + zz - 1)`` inclusive.
+    num_modes: Positive integer denoting the number of modes to solve for.
+    shift_iters: Number of iterations used to determine the largest eigenvalue
+      of the waveguide operator.
+    max_iters: Maximum number of eigenvalue solver iterations to execute.
+    tol: Error threshold for eigenvalue solver.
+
+  Returns:
+    ``(excitation, wavevector, error, iters)`` where
+    ``excitation.shape[-4:] == (2, wx, wy, wz, num_modes)``,
+    ``wavevector.shape[-1] == num_modes``, 
+    ``error.shape[-1] == num_modes``, and ``iters`` is an integer denoting the
+    number of iterations executed.
+    With respect to the last axis of the ``wavevector``, ``excitation``, and
+    ``error`` outputs, these are ordered by decreasing ``wavevector`` so that
+    the fundamental mode is at index ``0``.
+
+  """
+  # print(excitation.shape)
+  x = _random(epsilon, omega, width, num_modes)
+  print(x.shape)
+  excitation = _excitation_form(x, width, _slice_axis(width))
+  return wg_port_hot(epsilon, omega, position, excitation, shift_iters, max_iters, tol)
+
+
+def mode_solve(
+        epsilon: jax.Array,
+        omega: jax.Array,
+        num_modes: int,
+        init: jax.Array,
+        shift_iters: int = 10,
+        max_iters: int = 100000,
+        tol: float = 1e-4,
+) -> Tuple[jax.Array, jax.Array]:
+  """Solve for waveguide modes.
+
+  Args:
+    epsilon: ``(3, xx, yy, zz)`` array of permittivity values with exactly one
+      ``xx``, ``yy``, or ``zz`` equal to ``1``.
+    omega: Real-valued scalar angular frequency.
+    num_modes: Integer denoting number of modes to solve for.
+    init: ``(2, xx, yy, zz, num_modes)`` of values to use as initial guess.
+    shift_iters: Number of iterations used to determine the largest eigenvalue
+      of the waveguide operator.
+    max_iters: Maximum number of eigenvalue solver iterations to execute.
+    tol: Error threshold for eigenvalue solver.
+
+  Returns:
+    ``(excitation, wavevector, err, iters)`` where 
+    ``iters`` is the number of executed solver iterations, and
+    ``excitation.shape == (2, xx, yy, zz, num_modes)`` and
+    ``wavevector.shape == err.shape == (num_modes,)``, with 
+    ``excitation[..., i]``, ``wavevector[i]``, and ``err[i]``  being ordered
+    such that ``i == 0`` corresponds to the fundamental mode.
+
+  """
+  width = excitation.shape[-4:-1]
+  slice_axis = _slice_axis(width)
+  epsilon = _extract_slice(epsilon, position, width, slice_axis)
+
+  # Get largest eigenvalue to use as shift.
+  shift, _, _, _ = _subspace_iteration(
+      _operator(epsilon, omega, jnp.zeros_like(omega)),
+      _random(epsilon, omega, width, 1),
+      shift_iters,
+      tol,
+  )
+
+  # Solve for modes.
+  w, x, err, iters = _subspace_iteration(
+      _operator(epsilon, omega, shift[0]),
+      _vector_form(excitation, slice_axis),
+      max_iters,
+      tol,
+  )
+
+  # Push into ports format.
+  wavevector = jnp.sqrt(w + shift)
+  excitation = _excitation_form(x, width, slice_axis)
+
+  return excitation, wavevector, err, iters

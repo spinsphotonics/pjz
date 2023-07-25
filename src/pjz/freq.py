@@ -4,7 +4,7 @@
 import jax
 import jax.numpy as jnp
 
-from typing import Tuple
+from typing import Tuple, Union
 
 
 def ramped_sin(

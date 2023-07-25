@@ -1,18 +1,11 @@
 from .pjz_version import version as __version__
 
 from .solve import (
-    scatter,
+    field_solve,
 )
 
-from .ports import (
-    wg_port,
-    wg_port_hot,
-)
-
-from .freq import (
-    ramped_sin,
-    sampling_interval,
-    output_transform,
+from .modes import (
+    mode_solve,
 )
 
 from .struct import (
