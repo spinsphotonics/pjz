@@ -1,8 +1,11 @@
 """Solve Maxwell's equations."""
 
-import jax
-
 from typing import Tuple
+
+import fdtdz_jax
+import jax
+import jax.numpy as jnp
+import numpy as np
 
 
 def _zz(pml_widths, use_reduced_precision):
@@ -68,17 +71,23 @@ def _sampling_interval(
         dt: float
 ) -> int:
   """Sampling interval to observe `n` components within `[wmin, wmax]`."""
-  # First, we find the interval at which the maximum and minimum angular
-  # frequencies generate a phase difference of `pi * (n - 1) / n`.
-  cutoff = np.pi * (omega_n - 1) / omega_n / (omega_max - omega_min) / dt
-
-  # Now, we use the the periodicity of the center frequency to find the nearest
-  # "open window" (a time step in which no frequency component will complete a
-  # rotation which is a multiple of `pi` -- since this would make this component
-  # unobservable), and use this as our sampling interval.
+  # Period of average angular frequency.
   period = 4 * np.pi / (omega_max + omega_min) / dt
-  m = np.floor((cutoff - period / 4) / (period / 2))
-  return int(round(period / 4 + m * period / 2))
+
+  if omega_n == 1:
+    # If only one frequency is needed then we just sample at a quarter wavelength.
+    return int(round(period / 4))
+  else:
+    # Otherwise, we find the interval at which the maximum and minimum angular
+    # frequencies generate a phase difference of `pi * (n - 1) / n`.
+    cutoff = np.pi * (omega_n - 1) / omega_n / (omega_max - omega_min) / dt
+
+    # Now, we use the the periodicity of the center frequency to find the nearest
+    # "open window" (a time step in which no frequency component will complete a
+    # rotation which is a multiple of `pi` -- since this would make this component
+    # unobservable), and use this as our sampling interval.
+    m = np.floor((cutoff - period / 4) / (period / 2))
+    return int(round(period / 4 + m * period / 2))
 
 
 def _output_phases(
@@ -196,8 +205,8 @@ def field_solve(
   outputs = jnp.einsum('ij,j...->i...',
                        jnp.linalg.pinv(output_phases.T),
                        fields)
-  freq_fields = outputs[:omega.shape[0]] + 1j * outputs[omega.shape[0]:])
-      return freq_fields[...,
-  padding[0][0]: -padding[0][1],
-  padding[1][0]: -padding[1][1],
-  padding[2][0]: -padding[2][1]]
+  freq_fields = outputs[:omega.shape[0]] + 1j * outputs[omega.shape[0]:]
+  return freq_fields[...,
+                     padding[0][0]: -padding[0][1],
+                     padding[1][0]: -padding[1][1],
+                     padding[2][0]: -padding[2][1]]
