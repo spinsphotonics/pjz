@@ -8,55 +8,6 @@ from typing import Tuple
 from math import prod
 
 
-def rect(
-        shape: Tuple[int, ...],
-        center: jax.Array,
-        widths: jax.Array,
-) -> jax.Array:
-  """Rectangle."""
-  # return prod(jnp.clip((w + 1) / 2 - jnp.abs(p - c), 0, 1)
-  #             for p, c, w in zip(pos, center, widths))
-
-
-@jax.custom_jvp
-def _sqrt(x):
-  return jnp.sqrt(x)
-
-
-_sqrt.defjvps(lambda t, ans, x: 0.5 /
-              jnp.where(x == 0, jnp.inf, jnp.sqrt(x)) * t)
-
-
-def circ(
-        shape: Tuple[int, ...],
-        center: jax.Array,
-        radius: jax.Array,
-) -> jax.Array:
-  """Circle."""
-  # dist = _sqrt(sum((p - c)**2 for p, c in zip(pos, center)))
-  # return jnp.clip((radius + 0.5) - dist, 0, 1)
-
-
-def invert(a):
-  return 1 - a
-
-
-def union(a, b):
-  return jnp.maximum(a, b)
-
-
-def intersect(a, b):
-  return jnp.minimum(a, b)
-
-
-def dilate(a: jax.Array, radius: float) -> jax.Array:
-  """Dilate"""
-
-
-def shift(a: jax.Array, axis: int, distance: float) -> jax.Array:
-  """Shift."""
-
-
 def _render_single(layers, layer_pos, grid_start, grid_end, m, axis):
   # In-plane offsets.
   if axis != "x":
@@ -80,9 +31,9 @@ def _render_single(layers, layer_pos, grid_start, grid_end, m, axis):
   # Weighting values for pixels within each tile.
   w = (jnp.arange(2 * m) - (m - 0.5)) / (2 * m)**2
 
-  # Use `2 * m` factor instead of summing along one axis and averaging on the
-  # other. Factor of `12` corresponds to the integral of `u**2` in the
-  # denominator for grid size of `1`.
+  # Use ``2 * m`` factor instead of summing along one axis and averaging on the
+  # other. Factor of ``12`` corresponds to the integral of ``u**2`` in the
+  # denominator for grid size of ``1``.
   grads = [jnp.mean(12 * (2 * m) * x, (2, 4))
            for x in (lc * w[:, None, None], lc * w)]
 
@@ -93,7 +44,7 @@ def _render_single(layers, layer_pos, grid_start, grid_end, m, axis):
   aoi = jnp.mean(1 / lc, (2, 4))
 
   # Get start and end points for each layer in each grid cell.
-  # `p0` and `p1` have shape `(ll, zz)`.
+  # ``p0`` and ``p1`` have shape ``(ll, zz)``.
   #
   # And -infinity and +infinity as start and end points for first and last
   # layers respectively.
@@ -125,8 +76,8 @@ def _render_single(layers, layer_pos, grid_start, grid_end, m, axis):
 
   # Get the z-gradient.
   #
-  # Denominator has only a the cell size to the power of `2` because there is
-  # already a factor in `u`.
+  # Denominator has only a the cell size to the power of ``2`` because there is
+  # already a factor in ``u``.
   #
   grads.append(cross(avg, u * z) / ((grid_end - grid_start)**2 / 12))
 
@@ -138,42 +89,8 @@ def _render_single(layers, layer_pos, grid_start, grid_end, m, axis):
   return 1 / (pii * aoi + (1 - pii) * ioa)
 
 
-def render(layers, layer_pos, grid_start, grid_end, m):
-  """Render a three-dimensional vector array of permittivity values.
-
-  Produces a 3D vector array of permittivity values on the Yee cell based on a
-  layered stack of 2D profiles at magnification `2 * m`. Along the z-axis, both
-  the layer boundaries and grid positions are allowed to vary continuously,
-  while along the x- and y-axes the size of each (unmagnified) cell is assumed
-  to be `1`.
-
-  Attempts to follow [1] but only computes the on-diagonal elements of the
-  projection matrix and is adapted to a situation where there are no explicit
-  interfaces because the pixel values are allowed to vary continuously within
-  each layer.
-
-  Instead, the diagonal elements of the projection matrix for a given subvolume
-  are estimated by computing gradients across it where `df(u)/du` is computed as
-  the integral of `f(u) * u` over the integral of `u**2`  where `u` is relative
-  to the center of the cell.
-
-  [1] Farjadpour, Ardavan, et al. "Improving accuracy by subpixel smoothing in
-      the finite-difference time domain." Optics letters 31.20 (2006): 2972-2974
-
-  Args:
-    layers: `(ll, 2 * m * xx, 2 * m * yy)` array of magnified layer profiles.
-    layer_pos: `(ll - 1)` array of interface positions between the `ll` layer.
-      Assumed to be in monotonically increasing order.
-    grid_start: `(zz, 2)` array of start positions along the z-axis for both
-      Ex/Ey cells and offset Ez cells, in that order.
-    grid_end: Same as `grid_start` but for the end positions of cells along z.
-    m: Denotes a `2 * m` in-plane magnification factor of layer profiles.
-
-  Returns:
-    `(3, xx, yy, zz)` array of permittivity values with offsets and vector
-    components according to the finite-difference Yee cell.
-
-  """
+# TODO: Get rid of this once the testing is figured out.
+def _render(layers, layer_pos, grid_start, grid_end, m):
   return jnp.stack(
       [_render_single(layers, layer_pos, grid_start, grid_end, m, axis)
        for axis in "xyz"])
@@ -183,5 +100,45 @@ def render_layers(
         layers: jax.Array,
         interface_positions: jax.Array,
         magnification: int,
+        zz: int,
 ) -> jax.Array:
-  pass
+  """Render a three-dimensional vector array of permittivity values.
+
+  Produces a 3D vector array of permittivity values on the Yee cell based on a
+  layered stack of 2D profiles at magnification ``2 * m``. Along the z-axis, both
+  the layer boundaries and grid positions are allowed to vary continuously,
+  while along the x- and y-axes the size of each (unmagnified) cell is assumed
+  to be ``1``.
+
+  Attempts to follow [#subpixel_ref]_ but only computes the on-diagonal elements
+  of the projection matrix and is adapted to a situation where there are no
+  explicit interfaces because the pixel values are allowed to vary continuously
+  within each layer.
+
+  Instead, the diagonal elements of the projection matrix for a given subvolume
+  are estimated by computing gradients across it where ``df(u)/du`` is computed as
+  the integral of ``f(u) * u`` over the integral of ``u**2``  where ``u`` is relative
+  to the center of the cell.
+
+  .. [#subpixel_ref] Farjadpour, Ardavan, et al. "Improving accuracy by subpixel
+      smoothing in the finite-difference time domain." Optics letters 31.20
+      (2006): 2972-2974
+
+  Args:
+    layers: ``(ll, 2 * m * xx, 2 * m * yy)`` array of magnified layer profiles.
+    interface_positions: ``(ll - 1)`` array of interface positions between the
+      ``ll`` layer. Assumed to be in monotonically increasing order.
+    magnification: Denotes a ``2 * m`` in-plane magnification factor of layer profiles.
+    zz: Number of cells along z-axis.
+
+  Returns:
+    ``(3, xx, yy, zz)`` array of permittivity values with offsets and vector
+    components according to the finite-difference Yee cell.
+
+  """
+  return _render(
+      layers,
+      interface_positions,
+      jnp.arange(zz)[:, None] + jnp.array([[-0.5, 0]]),
+      jnp.arange(zz)[:, None] + jnp.array([[0.5, 1]]),
+      magnification)

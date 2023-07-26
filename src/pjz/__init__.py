@@ -9,6 +9,10 @@ from .modes import (
 )
 
 from .struct import (
+    render_layers,
+)
+
+from .shapes import (
     rect,
     circ,
     invert,
@@ -16,7 +20,6 @@ from .struct import (
     intersect,
     dilate,
     shift,
-    render_layers,
 )
 
 
