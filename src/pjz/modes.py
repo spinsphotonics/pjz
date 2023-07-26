@@ -6,19 +6,6 @@ import jax
 import jax.numpy as jnp
 
 
-def _axis_of_propagation(shape):
-  if shape[-2] == 1:
-    return "x"
-  elif shape[-2] == 1:
-    return "y"
-  elif shape[-1] == 1:
-    return "z"
-  else:
-    raise ValueError(
-        f"Could not determine singular spatial dimension for ``epsilon.shape`` "
-        f"of {epsilon.shape}.")
-
-
 def _random(shape):
   return jax.random.normal(jax.random.PRNGKey(0), shape)
 
@@ -131,7 +118,11 @@ def mode_solve(
     such that ``i == 0`` corresponds to the fundamental mode.
 
   """
-  prop_axis = _axis_of_propagation(epsilon.shape)
+  if not (1 in epsilon.shape):
+    raise ValueError(
+        f"Expected exactly one of the spatial dimensions of ``epsilon`` to be "
+        f"singular, instead got ``epsilon.shape == {epsilon.shape}``.")
+  prop_axis = "xyz"[epsilon.shape.index(1) - 1]
 
   if init is None:
     init = _random((2,) + epsilon.shape[1:] + (num_modes,))
@@ -140,10 +131,12 @@ def mode_solve(
   if prop_axis == "x":
     epsilon = epsilon[(1, 2, 0), ...]
   elif prop_axis == "y":
-    epsilon = jnp.swapaxes(epsilon[(2, 0, 1), ...], 1, 3)
+    # TODO: Need to fix this...
+    epsilon = jnp.flip(jnp.swapaxes(epsilon[(2, 0, 1), ...], 1, 3), axis=1)
     init = jnp.swapaxes(init[(1, 0), ...], 1, 3)
 
   epsilon = jnp.squeeze(epsilon)
+  print(epsilon.shape)
   init = jnp.reshape(init, (2,) + epsilon.shape[1:] + (num_modes,))
 
   # Get largest eigenvalue to use as shift.
@@ -166,7 +159,7 @@ def mode_solve(
   # Convert to output form.
   wavevector = jnp.sqrt(w + shift)
   if prop_axis == "y":
-    x = jnp.swapaxes(x[(1, 0), ...], 1, 2)
+    x = jnp.swapaxes(jnp.flip(x[(1, 0), ...], axis=1), 1, 2)
   excitation = jnp.expand_dims(x, "xyz".index(prop_axis) + 1)
 
   return wavevector, excitation, err, iters
