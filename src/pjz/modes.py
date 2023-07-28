@@ -133,7 +133,8 @@ def mode_solve(
   elif prop_axis == "y":
     # TODO: Need to fix this...
     epsilon = jnp.flip(jnp.swapaxes(epsilon[(2, 0, 1), ...], 1, 3), axis=1)
-    init = jnp.swapaxes(init[(1, 0), ...], 1, 3)
+    # TODO: May need to scale one of the components by `-1`.
+    init = jnp.flip(jnp.swapaxes(init[(1, 0), ...], 1, 3), axis=1)
 
   epsilon = jnp.squeeze(epsilon)
   print(epsilon.shape)
@@ -160,6 +161,8 @@ def mode_solve(
   wavevector = jnp.sqrt(w + shift)
   if prop_axis == "y":
     x = jnp.swapaxes(jnp.flip(x[(1, 0), ...], axis=1), 1, 2)
+  if prop_axis == "z":
+    x *= jnp.array([1, -1])[:, None, None, None]
   excitation = jnp.expand_dims(x, "xyz".index(prop_axis) + 1)
 
   return wavevector, excitation, err, iters
