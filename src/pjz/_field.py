@@ -110,8 +110,8 @@ def field(
     omega: jax.Array,
     source_pos: int,
     omega_range: Tuple[float, float],
-    dt: float,
     tt: int,
+    dt: float = 0.5,
     source_width: float = 4.0,
     source_delay: float = 4.0,
     absorption_padding: int = 50,
@@ -132,8 +132,8 @@ def field(
     omega: ``(ww,)`` array of angular frequencies.
     source_pos: Position of source along axis of propagation.
     omega_range: ``(omega_min, omega_max)`` range for ``omega`` values.
-    dt: See ``fdtdz_jax.fdtdz()``.
     tt: See ``fdtdz_jax.fdtdz()``.
+    dt: See ``fdtdz_jax.fdtdz()``.
     source_width: Number of periods for ramp-up of time-harmonic sources.
     source_delay: Delay before ramping up source, in ``source_width`` units.
     absorption_padding: Padding cells to add along both boundaries of the x- and
@@ -160,8 +160,8 @@ def field(
              (absorption_padding, absorption_padding),
              pad_zz)
 
-  # Pad up ``epsilon`` to full simulation domain size.
-  epsilon = jnp.pad(epsilon, ((0, 0),) + padding, "edge")
+  # # Pad up ``epsilon`` to full simulation domain size.
+  # epsilon = jnp.pad(epsilon, ((0, 0),) + padding, "edge")
 
   # Take care of input waveform and output transform.
   source_waveform = _ramped_sin(omega, source_width, source_delay, dt, tt)
@@ -188,27 +188,36 @@ def field(
     source = jnp.pad(source[None, ...], ((0, 1),) + 4 * ((0, 0),))
 
   # Boundary conditions.
-  absorption_mask = _absorption_mask(epsilon.shape[1], epsilon.shape[2],
+  absorption_mask = _absorption_mask(epsilon.shape[1] + 2 * absorption_padding,
+                                     epsilon.shape[2] + 2 * absorption_padding,
                                      absorption_padding, absorption_coeff)
 
   pml_sigma = _pml_sigma(pml_widths, _zz(pml_widths, use_reduced_precision),
                          pml_sigma_lnr, pml_sigma_m)
   pml_kappa = jnp.ones_like(pml_sigma)
-  pml_alpha = 0.05 * jnp.ones_like(pml_sigma)
+  pml_alpha = pml_alpha_coeff * jnp.ones_like(pml_sigma)
 
   # Simulate.
   fields = fdtdz_jax.fdtdz(
-      epsilon, dt, source, source_waveform, source_pos,
-      absorption_mask, pml_kappa, pml_sigma, pml_alpha, pml_widths,
-      output_steps, use_reduced_precision, launch_params)
+      epsilon=epsilon,
+      dt=dt,
+      source_field=source,
+      source_waveform=source_waveform,
+      source_position=source_pos,
+      absorption_mask=absorption_mask,
+      pml_kappa=pml_kappa,
+      pml_sigma=pml_sigma,
+      pml_alpha=pml_alpha,
+      pml_widths=pml_widths,
+      output_steps=output_steps,
+      use_reduced_precision=use_reduced_precision,
+      launch_params=launch_params,
+      offset=(padding[0][0], padding[1][0], padding[2][0]),
+  )
 
   # Convert to complex.
   output_phases = _output_phases(omega, output_steps, dt)
   outputs = jnp.einsum('ij,j...->i...',
                        jnp.linalg.pinv(output_phases.T),
                        fields)
-  freq_fields = outputs[:omega.shape[0]] + 1j * outputs[omega.shape[0]:]
-  return freq_fields[...,
-                     padding[0][0]: -padding[0][1],
-                     padding[1][0]: -padding[1][1],
-                     padding[2][0]: -padding[2][1]]
+  return outputs[:omega.shape[0]] + 1j * outputs[omega.shape[0]:]
