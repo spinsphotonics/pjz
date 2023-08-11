@@ -1,7 +1,7 @@
 """Per-pixel density."""
 
 
-def _density():
+def density():
   """
   """
   pass

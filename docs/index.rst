@@ -14,9 +14,10 @@ scale.
 Main API
 --------
 
-.. autofunction:: field_solve
-.. autofunction :: mode_solve
-.. autofunction :: render_layers
+.. autofunction:: field
+.. autofunction :: mode
+.. autofunction :: epsilon
+.. autofunction :: density 
 
 
 Shape functions

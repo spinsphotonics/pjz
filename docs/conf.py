@@ -45,7 +45,6 @@ html_theme_options = {
     'show_toc_level': 2,
     'repository_url': 'https://github.com/spinsphotonics/pjz',
     'use_repository_button': True,     # add a "link to repository" button
-    'nosidebar': True,
 }
 
 html_sidebars = {}
