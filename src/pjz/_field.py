@@ -1,6 +1,6 @@
 """Time-harmonic fields."""
 
-from typing import Any, Tuple
+from typing import Any, Dict, Sequence, Tuple
 
 import fdtdz_jax
 import jax
@@ -116,7 +116,7 @@ def field(
     source_delay: float = 4.0,
     absorption_padding: int = 50,
     absorption_coeff: float = 1e-4,
-    pml_widths: Tuple[int, int] = (8, 8),
+    pml_widths: Tuple[int, int] = (16, 16),
     pml_alpha_coeff: float = 0.0,
     pml_sigma_lnr: float = 0.5,
     pml_sigma_m: float = 1.3,
@@ -221,3 +221,55 @@ def field(
                        jnp.linalg.pinv(output_phases.T),
                        fields)
   return outputs[:omega.shape[0]] + 1j * outputs[omega.shape[0]:]
+
+
+def _scatter_impl(epsilon, omega, ports, field_kwargs):
+  sim = functools.partial(field, epsilon=epsilon, omega=omega, **field_kwargs)
+
+  # Simulation output fields.
+  fields = [sim(source=mode, source_pos=pos) for (mode, pos) in port]
+
+  # Scattering values.
+  svals = [[_overlap(mode, pos, f) for f in fields] for (mode, pos) in modes]
+
+  # Gradient of scattering values w.r.t. ``epsilon``.
+  grads = [[jnp.real(fi * fj) for fj in fields] for fi in fields]
+
+  return svals, grads, outputs
+
+
+@jax.custom_vjp
+def scatter(
+    epsilon: jax.Array,
+    omega: jax.Array,
+    ports: Sequence[Tuple[jax.Array, int]],
+    field_kwargs: Dict,
+):
+  """Returns scattering between ``ports``, differentiable w.r.t. ``epsilon``.
+
+  Args:
+    ports: Sequence of ``(mode, pos)`` tuples that define both the
+      excitation and output overlap operations for modes.
+    epsilon: ``(3, xx, yy, zz)`` array of permittivity values.
+    omega: ``(ww,)`` array of angular frequencies.
+
+  Returns:
+    Scattering values as ``svals[i][j]`` nested lists of ``(ww,)`` arrays
+    containing the scattering values from input port ``i`` to output port ``j``
+    over angular frequencies ``omega``.
+
+  """
+  svals, _, _ = _scatter_impl(epsilon, omega, ports, field_kwargs)
+  return svals
+
+
+def scatter_fwd(epsilon, omega, ports):
+  svals, grads, _ = _scatter_impl(epsilon, omega, ports, field_kwargs)
+  return svals, grads
+
+
+def scatter_bwd(grads, g):
+  return sum(
+      sum(jnp.sum(g[:, None, None, None, None] * gij, axis=0)
+          for gij in gi)
+      for gi in grads)
