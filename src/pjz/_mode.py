@@ -137,7 +137,6 @@ def mode(
     init = jnp.flip(jnp.swapaxes(init[(1, 0), ...], 1, 3), axis=1)
 
   epsilon = jnp.squeeze(epsilon)
-  print(epsilon.shape)
   init = jnp.reshape(init, (2,) + epsilon.shape[1:] + (num_modes,))
 
   # Get largest eigenvalue to use as shift.

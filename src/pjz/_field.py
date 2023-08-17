@@ -1,5 +1,6 @@
 """Time-harmonic fields."""
 
+from functools import partial
 from typing import Any, Dict, Sequence, Tuple
 
 import fdtdz_jax
@@ -104,6 +105,22 @@ def _output_phases(
   return jnp.concatenate([jnp.cos(theta), -jnp.sin(theta)], axis=0)
 
 
+@partial(jax.jit, static_argnames=[
+    "source_pos",
+    "omega_range",
+    "tt",
+    "dt",
+    "source_width",
+    "source_delay",
+    "absorption_padding",
+    "absorption_coeff",
+    "pml_widths",
+    "pml_alpha_coeff",
+    "pml_sigma_lnr",
+    "pml_sigma_m",
+    "use_reduced_precision",
+    "launch_params",
+])
 def field(
     epsilon: jax.Array,
     source: jax.Array,
@@ -236,39 +253,50 @@ def _prop_axis(mode):
 
 def _transverse_slice(arr, pos, axis):
   if axis == "x":
-    return arr[..., (1, 2), pos, :, :]
+    return arr[..., (1, 2), pos:(pos+1), :, :]
   elif axis == "y":
-    return arr[..., (0, 2), :, pos, :]
+    return arr[..., (0, 2), :, pos:(pos+1), :]
   else:  # axis == "z".
-    return arr[..., (0, 1), :, :, pos]
+    return arr[..., (0, 1), :, :, pos:(pos+1)]
 
 
 def _source(mode, pos, epsilon):
   return mode / _transverse_slice(epsilon, pos, _prop_axis(mode))
 
 
+def _overlap(mode, pos, output):
+  return jnp.sum(mode * _transverse_slice(output, pos, _prop_axis(mode)),
+                 axis=(-4, -3, -2, -1))
+
+
 def _scatter_impl(epsilon, omega, ports, field_kwargs):
-  sim = functools.partial(
-      field, epsilon=epsilon, omega=omega, **field_kwargs)
+  sim = partial(field, epsilon=epsilon, omega=omega, **field_kwargs)
 
   # Simulation output fields.
   fields = [sim(source=_source(mode, pos, epsilon), source_pos=pos)
-            for (mode, pos) in port]
+            for (mode, pos) in ports]
 
   # Scattering values.
   svals = [[_overlap(mode, pos, f) for f in fields] for (
-      mode, pos) in modes]
+      mode, pos) in ports]
 
   # Gradient of scattering values w.r.t. ``epsilon``.
-  grads = [[jnp.real(fi * fj) for fj in fields]
-           for fi in fields]
+  grads = [[fi * fj for fj in fields] for fi in fields]
 
-  return svals, grads, outputs
+  return svals, grads, fields
 
 
-def _overlap(mode, pos, field):
-  return jnp.sum(mode * _transverse_slice(field, pos, _prop_axis(mode)),
-                 axis=(-4, -3, -2, -1))
+def _scatter_fwd(epsilon, omega, ports, field_kwargs):
+  svals, grads, _ = _scatter_impl(epsilon, omega, ports, field_kwargs)
+  return svals, grads
+
+
+def _scatter_bwd(grad, g):
+  gradient = sum(
+      sum(jnp.sum(jnp.real(gij[:, None, None, None, None] * gradij), axis=0)
+          for gradij, gij in zip(gradi, gi))
+      for gradi, gi in zip(grad, g))
+  return gradient, None, None, None
 
 
 @jax.custom_vjp
@@ -296,13 +324,4 @@ def scatter(
     return svals
 
 
-def scatter_fwd(epsilon, omega, ports):
-  svals, grads, _ = _scatter_impl(epsilon, omega, ports, field_kwargs)
-  return svals, grads
-
-
-def scatter_bwd(grads, g):
-  return sum(
-      sum(jnp.sum(g[:, None, None, None, None] * gij, axis=0)
-          for gij in gi)
-      for gi in grads)
+scatter.defvjp(_scatter_fwd, _scatter_bwd)
