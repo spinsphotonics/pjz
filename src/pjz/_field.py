@@ -223,29 +223,62 @@ def field(
   return outputs[:omega.shape[0]] + 1j * outputs[omega.shape[0]:]
 
 
+def _prop_axis(mode):
+  # TODO: Move to a utils file, or better yet, move to modes with the full 3
+  # components.
+  if mode.shape[1:].count(1) == 1:
+    return "xyz"[mode.shape[1:].index(1)]
+  else:
+    raise ValueError(
+        f"``mode.shape[1:] must contain exactly one value of ``1``, "
+        f"instead got ``mode.shape == {{mode.shape}}``.")
+
+
+def _transverse_slice(arr, pos, axis):
+  if axis == "x":
+    return arr[..., (1, 2), pos, :, :]
+  elif axis == "y":
+    return arr[..., (0, 2), :, pos, :]
+  else:  # axis == "z".
+    return arr[..., (0, 1), :, :, pos]
+
+
+def _source(mode, pos, epsilon):
+  return mode / _transverse_slice(epsilon, pos, _prop_axis(mode))
+
+
 def _scatter_impl(epsilon, omega, ports, field_kwargs):
-  sim = functools.partial(field, epsilon=epsilon, omega=omega, **field_kwargs)
+  sim = functools.partial(
+      field, epsilon=epsilon, omega=omega, **field_kwargs)
 
   # Simulation output fields.
-  fields = [sim(source=mode, source_pos=pos) for (mode, pos) in port]
+  fields = [sim(source=_source(mode, pos, epsilon), source_pos=pos)
+            for (mode, pos) in port]
 
   # Scattering values.
-  svals = [[_overlap(mode, pos, f) for f in fields] for (mode, pos) in modes]
+  svals = [[_overlap(mode, pos, f) for f in fields] for (
+      mode, pos) in modes]
 
   # Gradient of scattering values w.r.t. ``epsilon``.
-  grads = [[jnp.real(fi * fj) for fj in fields] for fi in fields]
+  grads = [[jnp.real(fi * fj) for fj in fields]
+           for fi in fields]
 
   return svals, grads, outputs
+
+
+def _overlap(mode, pos, field):
+  return jnp.sum(mode * _transverse_slice(field, pos, _prop_axis(mode)),
+                 axis=(-4, -3, -2, -1))
 
 
 @jax.custom_vjp
 def scatter(
     epsilon: jax.Array,
     omega: jax.Array,
-    ports: Sequence[Tuple[jax.Array, int]],
+    ports: Sequence[Tuple[jax.Array, int]],  # TODO: Actual ``Port`` object.
     field_kwargs: Dict,
 ):
-  """Returns scattering between ``ports``, differentiable w.r.t. ``epsilon``.
+    """Returns scattering between ``ports``, differentiable w.r.t. ``epsilon``.
 
   Args:
     ports: Sequence of ``(mode, pos)`` tuples that define both the
@@ -259,8 +292,8 @@ def scatter(
     over angular frequencies ``omega``.
 
   """
-  svals, _, _ = _scatter_impl(epsilon, omega, ports, field_kwargs)
-  return svals
+    svals, _, _ = _scatter_impl(epsilon, omega, ports, field_kwargs)
+    return svals
 
 
 def scatter_fwd(epsilon, omega, ports):

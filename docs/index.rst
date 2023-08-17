@@ -1,7 +1,7 @@
 **pjz** 😴👕👖💤: Photonics on JAX
 ==================================
 
-`pjz <https://www.github.com/spinsphotonics/pjz>`_ (pee-jays) is 
+`pjz <https://www.github.com/spinsphotonics/pjz>`_ is 
 `JAX <https://www.github.com/google/jax>`_ and 
 `fdtd-z <https://www.github.com/spinsphotonics/fdtdz>`_, 
 a set of tools for runnning photonic simulation and optimization workflows at
@@ -14,6 +14,7 @@ scale.
 Main API
 --------
 
+.. autofunction:: scatter 
 .. autofunction:: field
 .. autofunction :: mode
 .. autofunction :: epsilon

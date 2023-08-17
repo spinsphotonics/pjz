@@ -1,6 +1,6 @@
 from .pjz_version import version as __version__
 
-from ._field import field
+from ._field import field, scatter
 from ._mode import mode
 from ._epsilon import epsilon
 from ._density import density
