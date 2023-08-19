@@ -16,20 +16,21 @@ Main API
 
 .. autofunction:: scatter 
 .. autofunction:: field
-.. autofunction :: mode
-.. autofunction :: epsilon
-.. autofunction :: density 
+.. autoclass:: SimParams
+.. autofunction:: mode
+.. autofunction:: epsilon
+.. autofunction:: density 
 
 
 Shape functions
 ---------------
 
-.. autofunction :: rect
-.. autofunction :: circ 
-.. autofunction :: invert 
-.. autofunction :: union
-.. autofunction :: intersect
-.. autofunction :: dilate
-.. autofunction :: shift
+.. autofunction:: rect
+.. autofunction:: circ 
+.. autofunction:: invert 
+.. autofunction:: union
+.. autofunction:: intersect
+.. autofunction:: dilate
+.. autofunction:: shift
 
 

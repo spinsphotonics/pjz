@@ -1,12 +1,28 @@
 """Time-harmonic fields."""
 
 from functools import partial
-from typing import Any, Dict, Sequence, Tuple
+from typing import Any, Dict, NamedTuple, Sequence, Tuple
 
 import fdtdz_jax
 import jax
 import jax.numpy as jnp
 import numpy as np
+
+
+class SimParams(NamedTuple):
+  omega_range: Tuple[float, float]
+  tt: int
+  dt: float = 0.5
+  source_width: float = 4.0
+  source_delay: float = 4.0
+  absorption_padding: int = 50
+  absorption_coeff: float = 1e-4
+  pml_widths: Tuple[int, int] = (16, 16)
+  pml_alpha_coeff: float = 0.0
+  pml_sigma_lnr: float = 0.5
+  pml_sigma_m: float = 1.3
+  use_reduced_precision: bool = True
+  launch_params: Any = None
 
 
 def _zz(pml_widths, use_reduced_precision):
@@ -105,40 +121,26 @@ def _output_phases(
   return jnp.concatenate([jnp.cos(theta), -jnp.sin(theta)], axis=0)
 
 
-@partial(jax.jit, static_argnames=[
-    "source_pos",
-    "omega_range",
-    "tt",
-    "dt",
-    "source_width",
-    "source_delay",
-    "absorption_padding",
-    "absorption_coeff",
-    "pml_widths",
-    "pml_alpha_coeff",
-    "pml_sigma_lnr",
-    "pml_sigma_m",
-    "use_reduced_precision",
-    "launch_params",
-])
+@partial(jax.jit, static_argnames=["source_pos", "sim_params"])
 def field(
     epsilon: jax.Array,
     source: jax.Array,
     omega: jax.Array,
     source_pos: int,
-    omega_range: Tuple[float, float],
-    tt: int,
-    dt: float = 0.5,
-    source_width: float = 4.0,
-    source_delay: float = 4.0,
-    absorption_padding: int = 50,
-    absorption_coeff: float = 1e-4,
-    pml_widths: Tuple[int, int] = (16, 16),
-    pml_alpha_coeff: float = 0.0,
-    pml_sigma_lnr: float = 0.5,
-    pml_sigma_m: float = 1.3,
-    use_reduced_precision: bool = True,
-    launch_params: Any = None,
+    sim_params: SimParams,
+    # omega_range: Tuple[float, float],
+    # tt: int,
+    # dt: float = 0.5,
+    # source_width: float = 4.0,
+    # source_delay: float = 4.0,
+    # absorption_padding: int = 50,
+    # absorption_coeff: float = 1e-4,
+    # pml_widths: Tuple[int, int] = (16, 16),
+    # pml_alpha_coeff: float = 0.0,
+    # pml_sigma_lnr: float = 0.5,
+    # pml_sigma_m: float = 1.3,
+    # use_reduced_precision: bool = True,
+    # launch_params: Any = None,
 ):
   """Time-harmonic solution of Maxwell's equations.
 
@@ -170,6 +172,8 @@ def field(
 
   """
   # TODO: Consider doing some shape testing
+  (omega_range, tt, dt, source_width, source_delay, absorption_padding, absorption_coeff, pml_widths,
+   pml_alpha_coeff, pml_sigma_lnr, pml_sigma_m, use_reduced_precision, launch_params) = sim_params
 
   # TODO: Document this.
   pad_zz = _pad_zz(epsilon.shape[3], pml_widths, use_reduced_precision)
@@ -269,16 +273,16 @@ def _overlap(mode, pos, output):
                  axis=(-4, -3, -2, -1))
 
 
-def _scatter_impl(epsilon, omega, ports, field_kwargs):
-  sim = partial(field, epsilon=epsilon, omega=omega, **field_kwargs)
+@partial(jax.jit, static_argnames=["pos", "sim_params"])
+def _scatter_impl(epsilon, omega, modes, pos, sim_params):
+  sim = partial(field, epsilon=epsilon, omega=omega, sim_params=sim_params)
 
   # Simulation output fields.
-  fields = [sim(source=_source(mode, pos, epsilon), source_pos=pos)
-            for (mode, pos) in ports]
+  fields = [sim(source=_source(m, p, epsilon), source_pos=p)
+            for (m, p) in zip(modes, pos)]
 
   # Scattering values.
-  svals = [[_overlap(mode, pos, f) for f in fields] for (
-      mode, pos) in ports]
+  svals = [[_overlap(m, p, f) for f in fields] for (m, p) in zip(modes, pos)]
 
   # Gradient of scattering values w.r.t. ``epsilon``.
   grads = [[fi * fj for fj in fields] for fi in fields]
@@ -286,8 +290,9 @@ def _scatter_impl(epsilon, omega, ports, field_kwargs):
   return svals, grads, fields
 
 
-def _scatter_fwd(epsilon, omega, ports, field_kwargs):
-  svals, grads, _ = _scatter_impl(epsilon, omega, ports, field_kwargs)
+def _scatter_fwd(epsilon, omega, ports, sim_params):
+  svals, grads, _ = _scatter_impl(
+      epsilon, omega, *list(zip(*ports)), sim_params)
   return svals, grads
 
 
@@ -304,7 +309,7 @@ def scatter(
     epsilon: jax.Array,
     omega: jax.Array,
     ports: Sequence[Tuple[jax.Array, int]],  # TODO: Actual ``Port`` object.
-    field_kwargs: Dict,
+    sim_params: SimParams,
 ):
     """Returns scattering between ``ports``, differentiable w.r.t. ``epsilon``.
 
@@ -320,7 +325,7 @@ def scatter(
     over angular frequencies ``omega``.
 
   """
-    svals, _, _ = _scatter_impl(epsilon, omega, ports, field_kwargs)
+    svals, _, _ = _scatter_impl(epsilon, omega, *list(zip(*ports)), sim_params)
     return svals
 
 
