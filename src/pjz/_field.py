@@ -273,7 +273,6 @@ def _overlap(mode, pos, output):
                  axis=(-4, -3, -2, -1))
 
 
-@partial(jax.jit, static_argnames=["pos", "sim_params"])
 def _scatter_impl(epsilon, omega, modes, pos, sim_params):
   sim = partial(field, epsilon=epsilon, omega=omega, sim_params=sim_params)
 
@@ -290,9 +289,9 @@ def _scatter_impl(epsilon, omega, modes, pos, sim_params):
   return svals, grads, fields
 
 
-def _scatter_fwd(epsilon, omega, ports, sim_params):
+def _scatter_fwd(epsilon, omega, modes, pos, sim_params):
   svals, grads, _ = _scatter_impl(
-      epsilon, omega, *list(zip(*ports)), sim_params)
+      epsilon, omega, modes, pos, sim_params)
   return svals, grads
 
 
@@ -301,17 +300,18 @@ def _scatter_bwd(grad, g):
       sum(jnp.sum(jnp.real(gij[:, None, None, None, None] * gradij), axis=0)
           for gradij, gij in zip(gradi, gi))
       for gradi, gi in zip(grad, g))
-  return gradient, None, None, None
+  return gradient, None, None, None, None
 
 
 @jax.custom_vjp
 def scatter(
     epsilon: jax.Array,
     omega: jax.Array,
-    ports: Sequence[Tuple[jax.Array, int]],  # TODO: Actual ``Port`` object.
+    modes: Tuple[jax.Array],
+    pos: Tuple[int],
     sim_params: SimParams,
 ):
-    """Returns scattering between ``ports``, differentiable w.r.t. ``epsilon``.
+  """Returns scattering between ``ports``, differentiable w.r.t. ``epsilon``.
 
   Args:
     ports: Sequence of ``(mode, pos)`` tuples that define both the
@@ -325,8 +325,8 @@ def scatter(
     over angular frequencies ``omega``.
 
   """
-    svals, _, _ = _scatter_impl(epsilon, omega, *list(zip(*ports)), sim_params)
-    return svals
+  svals, _, _ = _scatter_impl(epsilon, omega, modes, pos, sim_params)
+  return svals
 
 
 scatter.defvjp(_scatter_fwd, _scatter_bwd)
