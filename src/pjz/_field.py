@@ -32,6 +32,7 @@ def _zz(pml_widths, use_reduced_precision):
 
 def _pad_zz(epsilon_zz, pml_widths, use_reduced_precision):
   """Amount of padding needed in z-direction to fill-out fdtdz domain."""
+  print(f"pad_zz -> {epsilon_zz} {pml_widths} {use_reduced_precision}")
   zz = _zz(pml_widths, use_reduced_precision)
   bot = (zz - epsilon_zz) // 2
   top = zz - epsilon_zz - bot
@@ -171,6 +172,8 @@ def field(
     ``omega``.
 
   """
+  print(f"field -> {sim_params}")
+  # return omega[:, None, None, None, None] * epsilon
   # TODO: Consider doing some shape testing
   (omega_range, tt, dt, source_width, source_delay, absorption_padding, absorption_coeff, pml_widths,
    pml_alpha_coeff, pml_sigma_lnr, pml_sigma_m, use_reduced_precision, launch_params) = sim_params
@@ -256,12 +259,22 @@ def _prop_axis(mode):
 
 
 def _transverse_slice(arr, pos, axis):
-  if axis == "x":
-    return arr[..., (1, 2), pos:(pos+1), :, :]
-  elif axis == "y":
-    return arr[..., (0, 2), :, pos:(pos+1), :]
-  else:  # axis == "z".
-    return arr[..., (0, 1), :, :, pos:(pos+1)]
+  def is_axis(i):
+    return 3 - (arr.ndim - i) == "xyz".find(axis)
+
+  component_inds = [i for i in range(3) if i != "xyz".find(axis)]
+  arr = arr[..., component_inds, :, :, :]
+  return jax.lax.dynamic_slice(
+      arr,
+      start_indices=[pos if is_axis(i) else 0 for i in range(arr.ndim)],
+      slice_sizes=[1 if is_axis(i) else arr.shape[i] for i in range(arr.ndim)],
+  )
+  # if axis == "x":
+  #   return arr[..., (1, 2), pos:(pos+1), :, :]
+  # elif axis == "y":
+  #   return arr[..., (0, 2), :, pos:(pos+1), :]
+  # else:  # axis == "z".
+  #   return arr[..., (0, 1), :, :, pos:(pos+1)]
 
 
 def _source(mode, pos, epsilon):
@@ -273,6 +286,7 @@ def _overlap(mode, pos, output):
                  axis=(-4, -3, -2, -1))
 
 
+# @partial(jax.jit, static_argnames=["pos", "sim_params"])
 def _scatter_impl(epsilon, omega, modes, pos, sim_params):
   sim = partial(field, epsilon=epsilon, omega=omega, sim_params=sim_params)
 
@@ -289,21 +303,25 @@ def _scatter_impl(epsilon, omega, modes, pos, sim_params):
   return svals, grads, fields
 
 
+# @partial(jax.jit, static_argnames=["pos", "sim_params"])
 def _scatter_fwd(epsilon, omega, modes, pos, sim_params):
+  # def _scatter_fwd(pos, sim_params, epsilon, omega, modes):
+  print(f"{pos} {sim_params}")
   svals, grads, _ = _scatter_impl(
       epsilon, omega, modes, pos, sim_params)
   return svals, grads
 
 
-def _scatter_bwd(grad, g):
+def _scatter_bwd(pos, sim_params, grad, g):
   gradient = sum(
       sum(jnp.sum(jnp.real(gij[:, None, None, None, None] * gradij), axis=0)
           for gradij, gij in zip(gradi, gi))
       for gradi, gi in zip(grad, g))
-  return gradient, None, None, None, None
+  return gradient, None, None
 
 
-@jax.custom_vjp
+@partial(jax.custom_vjp, nondiff_argnums=(3, 4))
+@partial(jax.jit, static_argnums=(3, 4))
 def scatter(
     epsilon: jax.Array,
     omega: jax.Array,
