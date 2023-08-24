@@ -32,7 +32,6 @@ def _zz(pml_widths, use_reduced_precision):
 
 def _pad_zz(epsilon_zz, pml_widths, use_reduced_precision):
   """Amount of padding needed in z-direction to fill-out fdtdz domain."""
-  print(f"pad_zz -> {epsilon_zz} {pml_widths} {use_reduced_precision}")
   zz = _zz(pml_widths, use_reduced_precision)
   bot = (zz - epsilon_zz) // 2
   top = zz - epsilon_zz - bot
@@ -172,7 +171,6 @@ def field(
     ``omega``.
 
   """
-  print(f"field -> {sim_params}")
   # return omega[:, None, None, None, None] * epsilon
   # TODO: Consider doing some shape testing
   (omega_range, tt, dt, source_width, source_delay, absorption_padding, absorption_coeff, pml_widths,
@@ -303,10 +301,7 @@ def _scatter_impl(epsilon, omega, modes, pos, sim_params):
   return svals, grads, fields
 
 
-# @partial(jax.jit, static_argnames=["pos", "sim_params"])
 def _scatter_fwd(epsilon, omega, modes, pos, sim_params):
-  # def _scatter_fwd(pos, sim_params, epsilon, omega, modes):
-  print(f"{pos} {sim_params}")
   svals, grads, _ = _scatter_impl(
       epsilon, omega, modes, pos, sim_params)
   return svals, grads

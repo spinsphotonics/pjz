@@ -1,12 +1,15 @@
 """Per-pixel density."""
 
+from functools import partial
+import math
+
 import jax
 import jax.numpy as jnp
 
 
 def _cone(radius):
-  r = jnp.ceil(radius - 0.5)
-  u = jnp.square(jnp.arange(2 * r + 1) - r)
+  r = math.ceil(radius - 0.5)
+  u = jnp.square(jnp.array([i - r for i in range(2 * r + 1)]))
   weights = jnp.maximum(0, radius - jnp.sqrt(u + u[:, None]))
   return weights / jnp.sum(weights)
 
@@ -41,6 +44,7 @@ def _geom_loss(uproj, ufilt, c, eta_lo, eta_hi):
           (1 - uproj) * uinfl * jnp.square(jnp.minimum(0, eta_lo - ufilt)))
 
 
+@partial(jax.jit, static_argnames=["radius"])
 def density(u, radius, alpha, c=1.0, eta=0.5, eta_lo=0.25, eta_hi=0.75):
   ufilt = _filter(u, radius)
   uproj = _project(ufilt, eta)
