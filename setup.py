@@ -20,11 +20,10 @@ setup(
     author_email="jesselu@spinsphotonics.com",
     url="https://github.com/spinsphotonics/pjz",
     license="MIT",
-    description=(
-        "Run photonic simulation and optimization workflows at scale."),
+    description=("pjz is JAX and fdtd-z."),
     long_description=read("README.md"),
     long_description_content_type="text/markdown",
-    install_requires=["fdtdz>=1.1.1", "jax>=0.4.14", "jaxlib"],
+    install_requires=["fdtdz>=1.1.1", "jax>=0.4.14", "jaxlib>=0.4.11"],
     setup_requires=["setuptools_scm"],
     use_scm_version=True,
     package_dir={"": "src"},
