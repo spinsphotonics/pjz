@@ -1,29 +1,36 @@
 **pjz** 😴👕👖💤: Photonics on JAX
 ==================================
 
-`pjz <https://www.github.com/spinsphotonics/pjz>`_ (pee-jays) is 
+`pjz <https://www.github.com/spinsphotonics/pjz>`_ is 
 `JAX <https://www.github.com/google/jax>`_ and 
 `fdtd-z <https://www.github.com/spinsphotonics/fdtdz>`_, 
-a set of tools for runnning photonic simulation and optimization workflows at scale.
+a set of tools for runnning photonic simulation and optimization workflows at
+scale.
 
 .. currentmodule:: pjz
 
 .. automodule:: pjz
 
-.. autosummary::
-  :toctree: _autosummary
+Main API
+--------
 
-    absorption_mask
-    pml_sigma
-    frequency_components
-    source_amplitude
-    sampling_interval
-    render
-    waveguide
-    invert
-    union
-    intersect
-    rect
-    circ
-    ramped_sin
-    rect
+.. autofunction:: scatter 
+.. autofunction:: field
+.. autoclass:: SimParams
+.. autofunction:: mode
+.. autofunction:: epsilon
+.. autofunction:: density 
+
+
+Shape functions
+---------------
+
+.. autofunction:: rect
+.. autofunction:: circ 
+.. autofunction:: invert 
+.. autofunction:: union
+.. autofunction:: intersect
+.. autofunction:: dilate
+.. autofunction:: shift
+
+

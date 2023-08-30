@@ -10,7 +10,7 @@ import pathlib
 import sys
 
 sys.path.insert(0, os.path.join(pathlib.Path(
-    __file__).parents[2].resolve().as_posix(), "src"))
+    __file__).parents[2].resolve().as_posix(), ""))
 
 # -- Project information -----------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#project-information
@@ -24,17 +24,27 @@ author = 'SPINS Photonics'
 
 extensions = [
     'sphinx.ext.autodoc',
-    'sphinx.ext.autosummary',
     'sphinx.ext.doctest',
+    'sphinx.ext.napoleon',
 ]
 
 templates_path = ['_templates']
 exclude_patterns = ['_build', 'Thumbs.db', '.DS_Store']
 
-autosummary_generate = True
+autodoc_mock_imports = ["fdtdz_jax", "jax", "numpy", "scipy"]
 
 # -- Options for HTML output -------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#options-for-html-output
 
 html_theme = 'sphinx_book_theme'
-html_static_path = ['_static']
+
+# Theme options are theme-specific and customize the look and feel of a theme
+# further.  For a list of options available for each theme, see the
+# documentation.
+html_theme_options = {
+    'show_toc_level': 2,
+    'repository_url': 'https://github.com/spinsphotonics/pjz',
+    'use_repository_button': True,     # add a "link to repository" button
+}
+
+html_sidebars = {}
