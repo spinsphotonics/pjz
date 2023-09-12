@@ -31,7 +31,7 @@ extensions = [
 templates_path = ['_templates']
 exclude_patterns = ['_build', 'Thumbs.db', '.DS_Store']
 
-autodoc_mock_imports = ["fdtdz_jax", "jax", "numpy", "scipy"]
+autodoc_mock_imports = ["fdtdz_jax"]
 
 # -- Options for HTML output -------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#options-for-html-output

@@ -14,9 +14,9 @@ scale.
 Main API
 --------
 
-.. autofunction:: scatter 
-.. autofunction:: field
 .. autoclass:: SimParams
+.. autofunction:: field
+.. autofunction:: scatter 
 .. autofunction:: mode
 .. autofunction:: epsilon
 .. autofunction:: density 

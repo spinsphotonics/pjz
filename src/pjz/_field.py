@@ -1,4 +1,4 @@
-"""Time-harmonic fields."""
+"""Time-harmonic fields and scattering parameters."""
 
 from functools import partial
 from typing import Any, Dict, NamedTuple, Sequence, Tuple
@@ -10,10 +10,37 @@ import numpy as np
 
 
 class SimParams(NamedTuple):
+  """Simulation parameters for interfacing with the ``fdtdz`` package.
+
+  Parameterize ``fdtdz.fdtdz()`` for the specific case of extracting
+  time-harmonic solutions.
+
+  Attributes:
+    omega_range: ``(omega_min, omega_max)`` range of possible values for the
+      angular frequencies to be extracted from a single simulation.
+    tt: Number of FDTD updates to perform.
+    source_ramp: Number of periods over which to bring sources to steady state.
+    source_delay: Number of periods before starting the source ramp.
+    absorption_padding: Number of cells additional padding cells in the x-y
+      plane to use for adiabatic absorbing conditions.
+    absorption_coeff: Strength of the adiabatic absorber.
+    pml_widths: ``(pml_lo, pml_hi)`` denoting the number of PML cells to use
+      at the bottom and top of the simulation domain. See ``fdtdz.fdtdz()``
+      docstring for additional details.
+    pml_alpha_coeff: Strength of ``alpha`` parameter of the PML, see the
+      ``fdtdz.fdtdz()`` docstring for more details.
+    pml_sigma_lnr: Controls the ``sigma`` parameter of the PML, see the
+      ``fdtdz.fdtdz()`` docstring for more details.
+    pml_sigma_m: Controls the ``sigma`` parameter of the PML, see the
+      ``fdtdz.fdtdz()`` docstring for more details.
+    use_reduced_precision: See the ``fdtdz.fdtdz()`` docstring for more details.
+    launch_params: See the ``fdtdz.fdtdz()`` docstring for more details.
+
+  """
   omega_range: Tuple[float, float]
   tt: int
   dt: float = 0.5
-  source_width: float = 4.0
+  source_ramp: float = 4.0
   source_delay: float = 4.0
   absorption_padding: int = 50
   absorption_coeff: float = 1e-4
@@ -121,6 +148,7 @@ def _output_phases(
   return jnp.concatenate([jnp.cos(theta), -jnp.sin(theta)], axis=0)
 
 
+# TODO: Use jax arrays for source_pos so we don't need to mark it as static.
 @partial(jax.jit, static_argnames=["source_pos", "sim_params"])
 def field(
     epsilon: jax.Array,
@@ -128,19 +156,6 @@ def field(
     omega: jax.Array,
     source_pos: int,
     sim_params: SimParams,
-    # omega_range: Tuple[float, float],
-    # tt: int,
-    # dt: float = 0.5,
-    # source_width: float = 4.0,
-    # source_delay: float = 4.0,
-    # absorption_padding: int = 50,
-    # absorption_coeff: float = 1e-4,
-    # pml_widths: Tuple[int, int] = (16, 16),
-    # pml_alpha_coeff: float = 0.0,
-    # pml_sigma_lnr: float = 0.5,
-    # pml_sigma_m: float = 1.3,
-    # use_reduced_precision: bool = True,
-    # launch_params: Any = None,
 ):
   """Time-harmonic solution of Maxwell's equations.
 
@@ -150,31 +165,16 @@ def field(
       ``(2, xx, 1, yy)``, or ``(2, xx, yy, 1)``.
     omega: ``(ww,)`` array of angular frequencies.
     source_pos: Position of source along axis of propagation.
-    omega_range: ``(omega_min, omega_max)`` range for ``omega`` values.
-    tt: See ``fdtdz_jax.fdtdz()``.
-    dt: See ``fdtdz_jax.fdtdz()``.
-    source_width: Number of periods for ramp-up of time-harmonic sources.
-    source_delay: Delay before ramping up source, in ``source_width`` units.
-    absorption_padding: Padding cells to add along both boundaries of the x- and
-      y-axes for adiabatic absorption boundary conditions.
-    absorption_strength: Scaling coefficient for adiabatic absorption boundary.
-    pml_widths: See ``fdtdz_jax.fdtdz()`` documentation.
-    pml_alpha_coeff: Constant value for ``pml_alpha`` parameter of
-      ``fdtdz_jax.fdtdz()``.
-    pml_sigma_lnr: Natural logarithm of PML reflectivity.
-    pml_sigma_m: Exponent for spatial scaling of PML.
-    use_reduced_precision: See ``fdtdz_jax.fdtdz()`` documentation.
-    launch_params: See ``fdtdz_jax.fdtdz()`` documentation.
+    sim_params: Simulation parameters.
 
   Returns:
     ``(ww, 3, xx, yy, zz)`` array of complex-valued field values at the various
     ``omega``.
-
   """
-  # return omega[:, None, None, None, None] * epsilon
   # TODO: Consider doing some shape testing
-  (omega_range, tt, dt, source_width, source_delay, absorption_padding, absorption_coeff, pml_widths,
-   pml_alpha_coeff, pml_sigma_lnr, pml_sigma_m, use_reduced_precision, launch_params) = sim_params
+  (omega_range, tt, dt, source_ramp, source_delay, absorption_padding,
+   absorption_coeff, pml_widths, pml_alpha_coeff, pml_sigma_lnr, pml_sigma_m,
+   use_reduced_precision, launch_params) = sim_params
 
   # TODO: Document this.
   pad_zz = _pad_zz(epsilon.shape[3], pml_widths, use_reduced_precision)
@@ -182,11 +182,8 @@ def field(
              (absorption_padding, absorption_padding),
              pad_zz)
 
-  # # Pad up ``epsilon`` to full simulation domain size.
-  # epsilon = jnp.pad(epsilon, ((0, 0),) + padding, "edge")
-
   # Take care of input waveform and output transform.
-  source_waveform = _ramped_sin(omega, source_width, source_delay, dt, tt)
+  source_waveform = _ramped_sin(omega, source_ramp, source_delay, dt, tt)
   source_waveform = jnp.pad(source_waveform[:, None], ((0, 0), (0, 1)))
 
   interval = _sampling_interval(
@@ -267,12 +264,6 @@ def _transverse_slice(arr, pos, axis):
       start_indices=[pos if is_axis(i) else 0 for i in range(arr.ndim)],
       slice_sizes=[1 if is_axis(i) else arr.shape[i] for i in range(arr.ndim)],
   )
-  # if axis == "x":
-  #   return arr[..., (1, 2), pos:(pos+1), :, :]
-  # elif axis == "y":
-  #   return arr[..., (0, 2), :, pos:(pos+1), :]
-  # else:  # axis == "z".
-  #   return arr[..., (0, 1), :, :, pos:(pos+1)]
 
 
 def _source(mode, pos, epsilon):
@@ -284,7 +275,6 @@ def _overlap(mode, pos, output):
                  axis=(-4, -3, -2, -1))
 
 
-# @partial(jax.jit, static_argnames=["pos", "sim_params"])
 def _scatter_impl(epsilon, omega, modes, pos, sim_params):
   sim = partial(field, epsilon=epsilon, omega=omega, sim_params=sim_params)
 
@@ -315,6 +305,8 @@ def _scatter_bwd(pos, sim_params, grad, g):
   return gradient, None, None
 
 
+# TODO: Either move ``pos`` into ``modes``, but let's not have to static it
+# anymore.
 @partial(jax.custom_vjp, nondiff_argnums=(3, 4))
 @partial(jax.jit, static_argnums=(3, 4))
 def scatter(
@@ -324,18 +316,22 @@ def scatter(
     pos: Tuple[int],
     sim_params: SimParams,
 ):
-  """Returns scattering between ``ports``, differentiable w.r.t. ``epsilon``.
+  """Differentiable time-harmonic scattering values between ``modes``.
 
   Args:
-    ports: Sequence of ``(mode, pos)`` tuples that define both the
-      excitation and output overlap operations for modes.
-    epsilon: ``(3, xx, yy, zz)`` array of permittivity values.
+    epsilon: ``(3, xx, yy, zz)`` array of permittivity values. Differentiable.
     omega: ``(ww,)`` array of angular frequencies.
+    modes: ``(2, xx, yy, zz)`` arrays with exactly one singular spatial
+      dimension identifying the "ports" to be used when computing scattering
+      parameters.
+    pos: Integers denoting the location of modes along their respective
+      propagation axes.
+    sim_params: Simulation parameters.
 
   Returns:
     Scattering values as ``svals[i][j]`` nested lists of ``(ww,)`` arrays
-    containing the scattering values from input port ``i`` to output port ``j``
-    over angular frequencies ``omega``.
+    containing the scattering values from mode ``i`` to mode ``j`` over angular
+    frequencies ``omega``.
 
   """
   svals, _, _ = _scatter_impl(epsilon, omega, modes, pos, sim_params)

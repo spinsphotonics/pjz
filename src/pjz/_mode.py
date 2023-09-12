@@ -98,6 +98,10 @@ def mode(
 ) -> Tuple[jax.Array, jax.Array, jax.Array, int]:
   """Solve for waveguide modes.
 
+  Uses the subspace iteration method to obtain modes without leaving JAX.
+  Allows for updating mode solutions via the ``init`` parameter (e.g. for 
+  small changes in ``epsilon`` and/or ``omega``).
+
   Args:
     epsilon: ``(3, xx, yy, zz)`` array of permittivity values with exactly one
       ``xx``, ``yy``, or ``zz`` equal to ``1``.

@@ -244,30 +244,156 @@ a set of tools for runnning photonic simulation and optimization workflows at
 scale.</p>
 <span class="target" id="module-pjz"></span><section id="main-api">
 <h2>Main API<a class="headerlink" href="#main-api" title="Permalink to this heading">#</a></h2>
-<dl class="py function">
-<dt class="sig sig-object py" id="pjz.scatter">
-<span class="sig-prename descclassname"><span class="pre">pjz.</span></span><span class="sig-name descname"><span class="pre">scatter</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">epsilon</span></span><span class="p"><span class="pre">:</span></span><span class="w">  </span><span class="n"><span class="pre">jax.Array</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">omega</span></span><span class="p"><span class="pre">:</span></span><span class="w">  </span><span class="n"><span class="pre">jax.Array</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ports</span></span><span class="p"><span class="pre">:</span></span><span class="w">  </span><span class="n"><span class="pre">Sequence</span><span class="p"><span class="pre">[</span></span><span class="pre">Tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">jax.Array</span><span class="p"><span class="pre">,</span></span><span class="w">  </span><span class="pre">int</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">field_kwargs</span></span><span class="p"><span class="pre">:</span></span><span class="w">  </span><span class="n"><span class="pre">Dict</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pjz.scatter" title="Permalink to this definition">#</a></dt>
-<dd><p>Returns scattering between <code class="docutils literal notranslate"><span class="pre">ports</span></code>, differentiable w.r.t. <code class="docutils literal notranslate"><span class="pre">epsilon</span></code>.</p>
+<dl class="py class">
+<dt class="sig sig-object py" id="pjz.SimParams">
+<em class="property"><span class="pre">class</span><span class="w">  </span></em><span class="sig-prename descclassname"><span class="pre">pjz.</span></span><span class="sig-name descname"><span class="pre">SimParams</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">omega_range</span></span><span class="p"><span class="pre">:</span></span><span class="w">  </span><span class="n"><span class="pre">Tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">float</span><span class="p"><span class="pre">,</span></span><span class="w">  </span><span class="pre">float</span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tt</span></span><span class="p"><span class="pre">:</span></span><span class="w">  </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dt</span></span><span class="p"><span class="pre">:</span></span><span class="w">  </span><span class="n"><span class="pre">float</span></span><span class="w">  </span><span class="o"><span class="pre">=</span></span><span class="w">  </span><span class="default_value"><span class="pre">0.5</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">source_ramp</span></span><span class="p"><span class="pre">:</span></span><span class="w">  </span><span class="n"><span class="pre">float</span></span><span class="w">  </span><span class="o"><span class="pre">=</span></span><span class="w">  </span><span class="default_value"><span class="pre">4.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">source_delay</span></span><span class="p"><span class="pre">:</span></span><span class="w">  </span><span class="n"><span class="pre">float</span></span><span class="w">  </span><span class="o"><span class="pre">=</span></span><span class="w">  </span><span class="default_value"><span class="pre">4.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">absorption_padding</span></span><span class="p"><span class="pre">:</span></span><span class="w">  </span><span class="n"><span class="pre">int</span></span><span class="w">  </span><span class="o"><span class="pre">=</span></span><span class="w">  </span><span class="default_value"><span class="pre">50</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">absorption_coeff</span></span><span class="p"><span class="pre">:</span></span><span class="w">  </span><span class="n"><span class="pre">float</span></span><span class="w">  </span><span class="o"><span class="pre">=</span></span><span class="w">  </span><span class="default_value"><span class="pre">0.0001</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pml_widths</span></span><span class="p"><span class="pre">:</span></span><span class="w">  </span><span class="n"><span class="pre">Tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">,</span></span><span class="w">  </span><span class="pre">int</span><span class="p"><span class="pre">]</span></span></span><span class="w">  </span><span class="o"><span class="pre">=</span></span><span class="w">  </span><span class="default_value"><span class="pre">(16,</span> <span class="pre">16)</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pml_alpha_coeff</span></span><span class="p"><span class="pre">:</span></span><span class="w">  </span><span class="n"><span class="pre">float</span></span><span class="w">  </span><span class="o"><span class="pre">=</span></span><span class="w">  </span><span class="default_value"><span class="pre">0.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pml_sigma_lnr</span></span><span class="p"><span class="pre">:</span></span><span class="w">  </span><span class="n"><span class="pre">float</span></span><span class="w">  </span><span class="o"><span class="pre">=</span></span><span class="w">  </span><span class="default_value"><span class="pre">0.5</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pml_sigma_m</span></span><span class="p"><span class="pre">:</span></span><span class="w">  </span><span class="n"><span class="pre">float</span></span><span class="w">  </span><span class="o"><span class="pre">=</span></span><span class="w">  </span><span class="default_value"><span class="pre">1.3</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">use_reduced_precision</span></span><span class="p"><span class="pre">:</span></span><span class="w">  </span><span class="n"><span class="pre">bool</span></span><span class="w">  </span><span class="o"><span class="pre">=</span></span><span class="w">  </span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">launch_params</span></span><span class="p"><span class="pre">:</span></span><span class="w">  </span><span class="n"><span class="pre">Any</span><span class="w">  </span><span class="p"><span class="pre">|</span></span><span class="w">  </span><span class="pre">None</span></span><span class="w">  </span><span class="o"><span class="pre">=</span></span><span class="w">  </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pjz.SimParams" title="Permalink to this definition">#</a></dt>
+<dd><p>Simulation parameters for interfacing with the <code class="docutils literal notranslate"><span class="pre">fdtdz</span></code> package.</p>
+<p>Parameterize <code class="docutils literal notranslate"><span class="pre">fdtdz.fdtdz()</span></code> for the specific case of extracting
+time-harmonic solutions.</p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="pjz.SimParams.omega_range">
+<span class="sig-name descname"><span class="pre">omega_range</span></span><a class="headerlink" href="#pjz.SimParams.omega_range" title="Permalink to this definition">#</a></dt>
+<dd><p><code class="docutils literal notranslate"><span class="pre">(omega_min,</span> <span class="pre">omega_max)</span></code> range of possible values for the
+angular frequencies to be extracted from a single simulation.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>ports</strong> – Sequence of <code class="docutils literal notranslate"><span class="pre">(mode,</span> <span class="pre">pos)</span></code> tuples that define both the
-excitation and output overlap operations for modes.</p></li>
-<li><p><strong>epsilon</strong> – <code class="docutils literal notranslate"><span class="pre">(3,</span> <span class="pre">xx,</span> <span class="pre">yy,</span> <span class="pre">zz)</span></code> array of permittivity values.</p></li>
-<li><p><strong>omega</strong> – <code class="docutils literal notranslate"><span class="pre">(ww,)</span></code> array of angular frequencies.</p></li>
-</ul>
-</dd>
-<dt class="field-even">Returns<span class="colon">:</span></dt>
-<dd class="field-even"><p>Scattering values as <code class="docutils literal notranslate"><span class="pre">svals[i][j]</span></code> nested lists of <code class="docutils literal notranslate"><span class="pre">(ww,)</span></code> arrays
-containing the scattering values from input port <code class="docutils literal notranslate"><span class="pre">i</span></code> to output port <code class="docutils literal notranslate"><span class="pre">j</span></code>
-over angular frequencies <code class="docutils literal notranslate"><span class="pre">omega</span></code>.</p>
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Tuple[float, float]</p>
 </dd>
 </dl>
 </dd></dl>
 
+<dl class="py attribute">
+<dt class="sig sig-object py" id="pjz.SimParams.tt">
+<span class="sig-name descname"><span class="pre">tt</span></span><a class="headerlink" href="#pjz.SimParams.tt" title="Permalink to this definition">#</a></dt>
+<dd><p>Number of FDTD updates to perform.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>int</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="pjz.SimParams.source_ramp">
+<span class="sig-name descname"><span class="pre">source_ramp</span></span><a class="headerlink" href="#pjz.SimParams.source_ramp" title="Permalink to this definition">#</a></dt>
+<dd><p>Number of periods over which to bring sources to steady state.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>float</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="pjz.SimParams.source_delay">
+<span class="sig-name descname"><span class="pre">source_delay</span></span><a class="headerlink" href="#pjz.SimParams.source_delay" title="Permalink to this definition">#</a></dt>
+<dd><p>Number of periods before starting the source ramp.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>float</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="pjz.SimParams.absorption_padding">
+<span class="sig-name descname"><span class="pre">absorption_padding</span></span><a class="headerlink" href="#pjz.SimParams.absorption_padding" title="Permalink to this definition">#</a></dt>
+<dd><p>Number of cells additional padding cells in the x-y
+plane to use for adiabatic absorbing conditions.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>int</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="pjz.SimParams.absorption_coeff">
+<span class="sig-name descname"><span class="pre">absorption_coeff</span></span><a class="headerlink" href="#pjz.SimParams.absorption_coeff" title="Permalink to this definition">#</a></dt>
+<dd><p>Strength of the adiabatic absorber.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>float</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="pjz.SimParams.pml_widths">
+<span class="sig-name descname"><span class="pre">pml_widths</span></span><a class="headerlink" href="#pjz.SimParams.pml_widths" title="Permalink to this definition">#</a></dt>
+<dd><p><code class="docutils literal notranslate"><span class="pre">(pml_lo,</span> <span class="pre">pml_hi)</span></code> denoting the number of PML cells to use
+at the bottom and top of the simulation domain. See <code class="docutils literal notranslate"><span class="pre">fdtdz.fdtdz()</span></code>
+docstring for additional details.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Tuple[int, int]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="pjz.SimParams.pml_alpha_coeff">
+<span class="sig-name descname"><span class="pre">pml_alpha_coeff</span></span><a class="headerlink" href="#pjz.SimParams.pml_alpha_coeff" title="Permalink to this definition">#</a></dt>
+<dd><p>Strength of <code class="docutils literal notranslate"><span class="pre">alpha</span></code> parameter of the PML, see the
+<code class="docutils literal notranslate"><span class="pre">fdtdz.fdtdz()</span></code> docstring for more details.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>float</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="pjz.SimParams.pml_sigma_lnr">
+<span class="sig-name descname"><span class="pre">pml_sigma_lnr</span></span><a class="headerlink" href="#pjz.SimParams.pml_sigma_lnr" title="Permalink to this definition">#</a></dt>
+<dd><p>Controls the <code class="docutils literal notranslate"><span class="pre">sigma</span></code> parameter of the PML, see the
+<code class="docutils literal notranslate"><span class="pre">fdtdz.fdtdz()</span></code> docstring for more details.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>float</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="pjz.SimParams.pml_sigma_m">
+<span class="sig-name descname"><span class="pre">pml_sigma_m</span></span><a class="headerlink" href="#pjz.SimParams.pml_sigma_m" title="Permalink to this definition">#</a></dt>
+<dd><p>Controls the <code class="docutils literal notranslate"><span class="pre">sigma</span></code> parameter of the PML, see the
+<code class="docutils literal notranslate"><span class="pre">fdtdz.fdtdz()</span></code> docstring for more details.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>float</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="pjz.SimParams.use_reduced_precision">
+<span class="sig-name descname"><span class="pre">use_reduced_precision</span></span><a class="headerlink" href="#pjz.SimParams.use_reduced_precision" title="Permalink to this definition">#</a></dt>
+<dd><p>See the <code class="docutils literal notranslate"><span class="pre">fdtdz.fdtdz()</span></code> docstring for more details.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>bool</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="pjz.SimParams.launch_params">
+<span class="sig-name descname"><span class="pre">launch_params</span></span><a class="headerlink" href="#pjz.SimParams.launch_params" title="Permalink to this definition">#</a></dt>
+<dd><p>See the <code class="docutils literal notranslate"><span class="pre">fdtdz.fdtdz()</span></code> docstring for more details.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Any</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
 <dl class="py function">
 <dt class="sig sig-object py" id="pjz.field">
-<span class="sig-prename descclassname"><span class="pre">pjz.</span></span><span class="sig-name descname"><span class="pre">field</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">epsilon</span></span><span class="p"><span class="pre">:</span></span><span class="w">  </span><span class="n"><span class="pre">jax.Array</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">source</span></span><span class="p"><span class="pre">:</span></span><span class="w">  </span><span class="n"><span class="pre">jax.Array</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">omega</span></span><span class="p"><span class="pre">:</span></span><span class="w">  </span><span class="n"><span class="pre">jax.Array</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">source_pos</span></span><span class="p"><span class="pre">:</span></span><span class="w">  </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sim_params</span></span><span class="p"><span class="pre">:</span></span><span class="w">  </span><span class="n"><a class="reference internal" href="#pjz.SimParams" title="pjz._field.SimParams"><span class="pre">SimParams</span></a></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pjz.field" title="Permalink to this definition">#</a></dt>
+<span class="sig-prename descclassname"><span class="pre">pjz.</span></span><span class="sig-name descname"><span class="pre">field</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">epsilon</span></span><span class="p"><span class="pre">:</span></span><span class="w">  </span><span class="n"><span class="pre">Array</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">source</span></span><span class="p"><span class="pre">:</span></span><span class="w">  </span><span class="n"><span class="pre">Array</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">omega</span></span><span class="p"><span class="pre">:</span></span><span class="w">  </span><span class="n"><span class="pre">Array</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">source_pos</span></span><span class="p"><span class="pre">:</span></span><span class="w">  </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sim_params</span></span><span class="p"><span class="pre">:</span></span><span class="w">  </span><span class="n"><a class="reference internal" href="#pjz.SimParams" title="pjz._field.SimParams"><span class="pre">SimParams</span></a></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pjz.field" title="Permalink to this definition">#</a></dt>
 <dd><p>Time-harmonic solution of Maxwell’s equations.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
@@ -277,21 +403,7 @@ over angular frequencies <code class="docutils literal notranslate"><span class=
 <code class="docutils literal notranslate"><span class="pre">(2,</span> <span class="pre">xx,</span> <span class="pre">1,</span> <span class="pre">yy)</span></code>, or <code class="docutils literal notranslate"><span class="pre">(2,</span> <span class="pre">xx,</span> <span class="pre">yy,</span> <span class="pre">1)</span></code>.</p></li>
 <li><p><strong>omega</strong> – <code class="docutils literal notranslate"><span class="pre">(ww,)</span></code> array of angular frequencies.</p></li>
 <li><p><strong>source_pos</strong> – Position of source along axis of propagation.</p></li>
-<li><p><strong>omega_range</strong> – <code class="docutils literal notranslate"><span class="pre">(omega_min,</span> <span class="pre">omega_max)</span></code> range for <code class="docutils literal notranslate"><span class="pre">omega</span></code> values.</p></li>
-<li><p><strong>tt</strong> – See <code class="docutils literal notranslate"><span class="pre">fdtdz_jax.fdtdz()</span></code>.</p></li>
-<li><p><strong>dt</strong> – See <code class="docutils literal notranslate"><span class="pre">fdtdz_jax.fdtdz()</span></code>.</p></li>
-<li><p><strong>source_width</strong> – Number of periods for ramp-up of time-harmonic sources.</p></li>
-<li><p><strong>source_delay</strong> – Delay before ramping up source, in <code class="docutils literal notranslate"><span class="pre">source_width</span></code> units.</p></li>
-<li><p><strong>absorption_padding</strong> – Padding cells to add along both boundaries of the x- and
-y-axes for adiabatic absorption boundary conditions.</p></li>
-<li><p><strong>absorption_strength</strong> – Scaling coefficient for adiabatic absorption boundary.</p></li>
-<li><p><strong>pml_widths</strong> – See <code class="docutils literal notranslate"><span class="pre">fdtdz_jax.fdtdz()</span></code> documentation.</p></li>
-<li><p><strong>pml_alpha_coeff</strong> – Constant value for <code class="docutils literal notranslate"><span class="pre">pml_alpha</span></code> parameter of
-<code class="docutils literal notranslate"><span class="pre">fdtdz_jax.fdtdz()</span></code>.</p></li>
-<li><p><strong>pml_sigma_lnr</strong> – Natural logarithm of PML reflectivity.</p></li>
-<li><p><strong>pml_sigma_m</strong> – Exponent for spatial scaling of PML.</p></li>
-<li><p><strong>use_reduced_precision</strong> – See <code class="docutils literal notranslate"><span class="pre">fdtdz_jax.fdtdz()</span></code> documentation.</p></li>
-<li><p><strong>launch_params</strong> – See <code class="docutils literal notranslate"><span class="pre">fdtdz_jax.fdtdz()</span></code> documentation.</p></li>
+<li><p><strong>sim_params</strong> – Simulation parameters.</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
@@ -301,15 +413,38 @@ y-axes for adiabatic absorption boundary conditions.</p></li>
 </dl>
 </dd></dl>
 
-<dl class="py class">
-<dt class="sig sig-object py" id="pjz.SimParams">
-<em class="property"><span class="pre">class</span><span class="w">  </span></em><span class="sig-prename descclassname"><span class="pre">pjz.</span></span><span class="sig-name descname"><span class="pre">SimParams</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">omega_range</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tt</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dt</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">source_width</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">source_delay</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">absorption_padding</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">absorption_coeff</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pml_widths</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pml_alpha_coeff</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pml_sigma_lnr</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pml_sigma_m</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">use_reduced_precision</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">launch_params</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pjz.SimParams" title="Permalink to this definition">#</a></dt>
-<dd></dd></dl>
+<dl class="py function">
+<dt class="sig sig-object py" id="pjz.scatter">
+<span class="sig-prename descclassname"><span class="pre">pjz.</span></span><span class="sig-name descname"><span class="pre">scatter</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">epsilon</span></span><span class="p"><span class="pre">:</span></span><span class="w">  </span><span class="n"><span class="pre">Array</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">omega</span></span><span class="p"><span class="pre">:</span></span><span class="w">  </span><span class="n"><span class="pre">Array</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">modes</span></span><span class="p"><span class="pre">:</span></span><span class="w">  </span><span class="n"><span class="pre">Tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">Array</span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pos</span></span><span class="p"><span class="pre">:</span></span><span class="w">  </span><span class="n"><span class="pre">Tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sim_params</span></span><span class="p"><span class="pre">:</span></span><span class="w">  </span><span class="n"><a class="reference internal" href="#pjz.SimParams" title="pjz._field.SimParams"><span class="pre">SimParams</span></a></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pjz.scatter" title="Permalink to this definition">#</a></dt>
+<dd><p>Differentiable time-harmonic scattering values between <code class="docutils literal notranslate"><span class="pre">modes</span></code>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>epsilon</strong> – <code class="docutils literal notranslate"><span class="pre">(3,</span> <span class="pre">xx,</span> <span class="pre">yy,</span> <span class="pre">zz)</span></code> array of permittivity values. Differentiable.</p></li>
+<li><p><strong>omega</strong> – <code class="docutils literal notranslate"><span class="pre">(ww,)</span></code> array of angular frequencies.</p></li>
+<li><p><strong>modes</strong> – <code class="docutils literal notranslate"><span class="pre">(2,</span> <span class="pre">xx,</span> <span class="pre">yy,</span> <span class="pre">zz)</span></code> arrays with exactly one singular spatial
+dimension identifying the “ports” to be used when computing scattering
+parameters.</p></li>
+<li><p><strong>pos</strong> – Integers denoting the location of modes along their respective
+propagation axes.</p></li>
+<li><p><strong>sim_params</strong> – Simulation parameters.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Scattering values as <code class="docutils literal notranslate"><span class="pre">svals[i][j]</span></code> nested lists of <code class="docutils literal notranslate"><span class="pre">(ww,)</span></code> arrays
+containing the scattering values from mode <code class="docutils literal notranslate"><span class="pre">i</span></code> to mode <code class="docutils literal notranslate"><span class="pre">j</span></code> over angular
+frequencies <code class="docutils literal notranslate"><span class="pre">omega</span></code>.</p>
+</dd>
+</dl>
+</dd></dl>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="pjz.mode">
-<span class="sig-prename descclassname"><span class="pre">pjz.</span></span><span class="sig-name descname"><span class="pre">mode</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">epsilon</span></span><span class="p"><span class="pre">:</span></span><span class="w">  </span><span class="n"><span class="pre">jax.Array</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">omega</span></span><span class="p"><span class="pre">:</span></span><span class="w">  </span><span class="n"><span class="pre">jax.Array</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">num_modes</span></span><span class="p"><span class="pre">:</span></span><span class="w">  </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">init</span></span><span class="p"><span class="pre">:</span></span><span class="w">  </span><span class="n"><span class="pre">jax.Array</span><span class="w">  </span><span class="p"><span class="pre">|</span></span><span class="w">  </span><span class="pre">None</span></span><span class="w">  </span><span class="o"><span class="pre">=</span></span><span class="w">  </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">shift_iters</span></span><span class="p"><span class="pre">:</span></span><span class="w">  </span><span class="n"><span class="pre">int</span></span><span class="w">  </span><span class="o"><span class="pre">=</span></span><span class="w">  </span><span class="default_value"><span class="pre">10</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_iters</span></span><span class="p"><span class="pre">:</span></span><span class="w">  </span><span class="n"><span class="pre">int</span></span><span class="w">  </span><span class="o"><span class="pre">=</span></span><span class="w">  </span><span class="default_value"><span class="pre">100000</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tol</span></span><span class="p"><span class="pre">:</span></span><span class="w">  </span><span class="n"><span class="pre">float</span></span><span class="w">  </span><span class="o"><span class="pre">=</span></span><span class="w">  </span><span class="default_value"><span class="pre">0.0001</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">jax.Array</span><span class="p"><span class="pre">,</span></span><span class="w">  </span><span class="pre">jax.Array</span><span class="p"><span class="pre">,</span></span><span class="w">  </span><span class="pre">jax.Array</span><span class="p"><span class="pre">,</span></span><span class="w">  </span><span class="pre">int</span><span class="p"><span class="pre">]</span></span></span></span><a class="headerlink" href="#pjz.mode" title="Permalink to this definition">#</a></dt>
+<span class="sig-prename descclassname"><span class="pre">pjz.</span></span><span class="sig-name descname"><span class="pre">mode</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">epsilon</span></span><span class="p"><span class="pre">:</span></span><span class="w">  </span><span class="n"><span class="pre">Array</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">omega</span></span><span class="p"><span class="pre">:</span></span><span class="w">  </span><span class="n"><span class="pre">Array</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">num_modes</span></span><span class="p"><span class="pre">:</span></span><span class="w">  </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">init</span></span><span class="p"><span class="pre">:</span></span><span class="w">  </span><span class="n"><span class="pre">Array</span><span class="w">  </span><span class="p"><span class="pre">|</span></span><span class="w">  </span><span class="pre">None</span></span><span class="w">  </span><span class="o"><span class="pre">=</span></span><span class="w">  </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">shift_iters</span></span><span class="p"><span class="pre">:</span></span><span class="w">  </span><span class="n"><span class="pre">int</span></span><span class="w">  </span><span class="o"><span class="pre">=</span></span><span class="w">  </span><span class="default_value"><span class="pre">10</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_iters</span></span><span class="p"><span class="pre">:</span></span><span class="w">  </span><span class="n"><span class="pre">int</span></span><span class="w">  </span><span class="o"><span class="pre">=</span></span><span class="w">  </span><span class="default_value"><span class="pre">100000</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tol</span></span><span class="p"><span class="pre">:</span></span><span class="w">  </span><span class="n"><span class="pre">float</span></span><span class="w">  </span><span class="o"><span class="pre">=</span></span><span class="w">  </span><span class="default_value"><span class="pre">0.0001</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">Array</span><span class="p"><span class="pre">,</span></span><span class="w">  </span><span class="pre">Array</span><span class="p"><span class="pre">,</span></span><span class="w">  </span><span class="pre">Array</span><span class="p"><span class="pre">,</span></span><span class="w">  </span><span class="pre">int</span><span class="p"><span class="pre">]</span></span></span></span><a class="headerlink" href="#pjz.mode" title="Permalink to this definition">#</a></dt>
 <dd><p>Solve for waveguide modes.</p>
+<p>Uses the subspace iteration method to obtain modes without leaving JAX.
+Allows for updating mode solutions via the <code class="docutils literal notranslate"><span class="pre">init</span></code> parameter (e.g. for
+small changes in <code class="docutils literal notranslate"><span class="pre">epsilon</span></code> and/or <code class="docutils literal notranslate"><span class="pre">omega</span></code>).</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
@@ -337,7 +472,7 @@ such that <code class="docutils literal notranslate"><span class="pre">i</span> 
 
 <dl class="py function">
 <dt class="sig sig-object py" id="pjz.epsilon">
-<span class="sig-prename descclassname"><span class="pre">pjz.</span></span><span class="sig-name descname"><span class="pre">epsilon</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">layers</span></span><span class="p"><span class="pre">:</span></span><span class="w">  </span><span class="n"><span class="pre">jax.Array</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">interface_positions</span></span><span class="p"><span class="pre">:</span></span><span class="w">  </span><span class="n"><span class="pre">jax.Array</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">magnification</span></span><span class="p"><span class="pre">:</span></span><span class="w">  </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">zz</span></span><span class="p"><span class="pre">:</span></span><span class="w">  </span><span class="n"><span class="pre">int</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">jax.Array</span></span></span><a class="headerlink" href="#pjz.epsilon" title="Permalink to this definition">#</a></dt>
+<span class="sig-prename descclassname"><span class="pre">pjz.</span></span><span class="sig-name descname"><span class="pre">epsilon</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">layers</span></span><span class="p"><span class="pre">:</span></span><span class="w">  </span><span class="n"><span class="pre">Array</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">interface_positions</span></span><span class="p"><span class="pre">:</span></span><span class="w">  </span><span class="n"><span class="pre">Array</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">magnification</span></span><span class="p"><span class="pre">:</span></span><span class="w">  </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">zz</span></span><span class="p"><span class="pre">:</span></span><span class="w">  </span><span class="n"><span class="pre">int</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Array</span></span></span><a class="headerlink" href="#pjz.epsilon" title="Permalink to this definition">#</a></dt>
 <dd><p>Render a three-dimensional vector array of permittivity values.</p>
 <p>Produces a 3D vector array of permittivity values on the Yee cell based on a
 layered stack of 2D profiles at magnification <code class="docutils literal notranslate"><span class="pre">2</span> <span class="pre">*</span> <span class="pre">m</span></code>. Along the z-axis, both
@@ -380,20 +515,52 @@ components according to the finite-difference Yee cell.</p>
 <dl class="py function">
 <dt class="sig sig-object py" id="pjz.density">
 <span class="sig-prename descclassname"><span class="pre">pjz.</span></span><span class="sig-name descname"><span class="pre">density</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">u</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">radius</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">alpha</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">c</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">eta</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.5</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">eta_lo</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.25</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">eta_hi</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.75</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pjz.density" title="Permalink to this definition">#</a></dt>
-<dd></dd></dl>
+<dd><p>Computes a per-pixel density from raw optimization variable <code class="docutils literal notranslate"><span class="pre">u</span></code>.</p>
+<p>Implements the “three-field” scheme detailed in <a class="footnote-reference brackets" href="#threefield-ref" id="id2" role="doc-noteref"><span class="fn-bracket">[</span>2<span class="fn-bracket">]</span></a> in order
+to allow for a final density that is binary (with the exception of boundary
+values) and that conforms to a minimum feature size requirement.</p>
+<aside class="footnote-list brackets">
+<aside class="footnote brackets" id="threefield-ref" role="note">
+<span class="label"><span class="fn-bracket">[</span><a role="doc-backlink" href="#id2">2</a><span class="fn-bracket">]</span></span>
+<p>Zhou, Mingdong, et al. “Minimum length scale in topology
+optimization by geometric constraints.” Computer Methods in Applied Mechanics
+and Engineering 293 (2015): 266-282.</p>
+</aside>
+</aside>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>u</strong> – <cite>(xx, yy)`</cite> variable array with values within <code class="docutils literal notranslate"><span class="pre">[0,</span> <span class="pre">1]</span></code>.</p></li>
+<li><p><strong>radius</strong> – Radius of the conical filter used to blur <code class="docutils literal notranslate"><span class="pre">u</span></code>.</p></li>
+<li><p><strong>alpha</strong> – Float within <code class="docutils literal notranslate"><span class="pre">[0,</span> <span class="pre">1]</span></code> controlling binarization of the density,
+where <code class="docutils literal notranslate"><span class="pre">0</span></code> denotes no binarization, and <code class="docutils literal notranslate"><span class="pre">1</span></code> denotes full binarization
+of all pixels except those on boundaries (as given by <code class="docutils literal notranslate"><span class="pre">eta</span></code>) which are
+left unchanged (equal to the <code class="docutils literal notranslate"><span class="pre">alpha</span> <span class="pre">=</span> <span class="pre">0</span></code> case).</p></li>
+<li><p><strong>c</strong> – Controls the detection of inflection points.</p></li>
+<li><p><strong>eta</strong> – Threshold value used to binarize the density.</p></li>
+<li><p><strong>eta_lo</strong> – Controls minimum feature size of void-phase features.</p></li>
+<li><p><strong>eta_hi</strong> – Controls minimum feature size of <code class="docutils literal notranslate"><span class="pre">density</span> <span class="pre">=</span> <span class="pre">1</span></code> features.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p><code class="docutils literal notranslate"><span class="pre">(density,</span> <span class="pre">loss)</span></code> arrays, both of shape <code class="docutils literal notranslate"><span class="pre">(xx,</span> <span class="pre">yy)</span></code>, corresponding to
+the pixel density and the minimum feature size loss respectively.</p>
+</dd>
+</dl>
+</dd></dl>
 
 </section>
 <section id="shape-functions">
 <h2>Shape functions<a class="headerlink" href="#shape-functions" title="Permalink to this heading">#</a></h2>
 <dl class="py function">
 <dt class="sig sig-object py" id="pjz.rect">
-<span class="sig-prename descclassname"><span class="pre">pjz.</span></span><span class="sig-name descname"><span class="pre">rect</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">shape</span></span><span class="p"><span class="pre">:</span></span><span class="w">  </span><span class="n"><span class="pre">Tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">,</span></span><span class="w">  </span><span class="p"><span class="pre">...</span></span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">center</span></span><span class="p"><span class="pre">:</span></span><span class="w">  </span><span class="n"><span class="pre">jax.Array</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">widths</span></span><span class="p"><span class="pre">:</span></span><span class="w">  </span><span class="n"><span class="pre">jax.Array</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">jax.Array</span></span></span><a class="headerlink" href="#pjz.rect" title="Permalink to this definition">#</a></dt>
+<span class="sig-prename descclassname"><span class="pre">pjz.</span></span><span class="sig-name descname"><span class="pre">rect</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">shape</span></span><span class="p"><span class="pre">:</span></span><span class="w">  </span><span class="n"><span class="pre">Tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">,</span></span><span class="w">  </span><span class="p"><span class="pre">...</span></span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">center</span></span><span class="p"><span class="pre">:</span></span><span class="w">  </span><span class="n"><span class="pre">Array</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">widths</span></span><span class="p"><span class="pre">:</span></span><span class="w">  </span><span class="n"><span class="pre">Array</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Array</span></span></span><a class="headerlink" href="#pjz.rect" title="Permalink to this definition">#</a></dt>
 <dd><p>Rectangle.</p>
 </dd></dl>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="pjz.circ">
-<span class="sig-prename descclassname"><span class="pre">pjz.</span></span><span class="sig-name descname"><span class="pre">circ</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">shape</span></span><span class="p"><span class="pre">:</span></span><span class="w">  </span><span class="n"><span class="pre">Tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">,</span></span><span class="w">  </span><span class="p"><span class="pre">...</span></span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">center</span></span><span class="p"><span class="pre">:</span></span><span class="w">  </span><span class="n"><span class="pre">jax.Array</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">radius</span></span><span class="p"><span class="pre">:</span></span><span class="w">  </span><span class="n"><span class="pre">jax.Array</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">jax.Array</span></span></span><a class="headerlink" href="#pjz.circ" title="Permalink to this definition">#</a></dt>
+<span class="sig-prename descclassname"><span class="pre">pjz.</span></span><span class="sig-name descname"><span class="pre">circ</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">shape</span></span><span class="p"><span class="pre">:</span></span><span class="w">  </span><span class="n"><span class="pre">Tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">,</span></span><span class="w">  </span><span class="p"><span class="pre">...</span></span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">center</span></span><span class="p"><span class="pre">:</span></span><span class="w">  </span><span class="n"><span class="pre">Array</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">radius</span></span><span class="p"><span class="pre">:</span></span><span class="w">  </span><span class="n"><span class="pre">Array</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Array</span></span></span><a class="headerlink" href="#pjz.circ" title="Permalink to this definition">#</a></dt>
 <dd><p>Circle.</p>
 </dd></dl>
 
@@ -414,13 +581,13 @@ components according to the finite-difference Yee cell.</p>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="pjz.dilate">
-<span class="sig-prename descclassname"><span class="pre">pjz.</span></span><span class="sig-name descname"><span class="pre">dilate</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">a</span></span><span class="p"><span class="pre">:</span></span><span class="w">  </span><span class="n"><span class="pre">jax.Array</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">radius</span></span><span class="p"><span class="pre">:</span></span><span class="w">  </span><span class="n"><span class="pre">float</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">jax.Array</span></span></span><a class="headerlink" href="#pjz.dilate" title="Permalink to this definition">#</a></dt>
+<span class="sig-prename descclassname"><span class="pre">pjz.</span></span><span class="sig-name descname"><span class="pre">dilate</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">a</span></span><span class="p"><span class="pre">:</span></span><span class="w">  </span><span class="n"><span class="pre">Array</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">radius</span></span><span class="p"><span class="pre">:</span></span><span class="w">  </span><span class="n"><span class="pre">float</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Array</span></span></span><a class="headerlink" href="#pjz.dilate" title="Permalink to this definition">#</a></dt>
 <dd><p>Dilate</p>
 </dd></dl>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="pjz.shift">
-<span class="sig-prename descclassname"><span class="pre">pjz.</span></span><span class="sig-name descname"><span class="pre">shift</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">a</span></span><span class="p"><span class="pre">:</span></span><span class="w">  </span><span class="n"><span class="pre">jax.Array</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">axis</span></span><span class="p"><span class="pre">:</span></span><span class="w">  </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">distance</span></span><span class="p"><span class="pre">:</span></span><span class="w">  </span><span class="n"><span class="pre">float</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">jax.Array</span></span></span><a class="headerlink" href="#pjz.shift" title="Permalink to this definition">#</a></dt>
+<span class="sig-prename descclassname"><span class="pre">pjz.</span></span><span class="sig-name descname"><span class="pre">shift</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">a</span></span><span class="p"><span class="pre">:</span></span><span class="w">  </span><span class="n"><span class="pre">Array</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">axis</span></span><span class="p"><span class="pre">:</span></span><span class="w">  </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">distance</span></span><span class="p"><span class="pre">:</span></span><span class="w">  </span><span class="n"><span class="pre">float</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Array</span></span></span><a class="headerlink" href="#pjz.shift" title="Permalink to this definition">#</a></dt>
 <dd><p>Shift.</p>
 </dd></dl>
 

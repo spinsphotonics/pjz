@@ -46,6 +46,33 @@ def _geom_loss(uproj, ufilt, c, eta_lo, eta_hi):
 
 @partial(jax.jit, static_argnames=["radius"])
 def density(u, radius, alpha, c=1.0, eta=0.5, eta_lo=0.25, eta_hi=0.75):
+  """Computes a per-pixel density from raw optimization variable ``u``.
+
+  Implements the "three-field" scheme detailed in [#threefield_ref]_ in order
+  to allow for a final density that is binary (with the exception of boundary
+  values) and that conforms to a minimum feature size requirement.
+
+  .. [#threefield_ref] Zhou, Mingdong, et al. "Minimum length scale in topology
+    optimization by geometric constraints." Computer Methods in Applied Mechanics 
+    and Engineering 293 (2015): 266-282.
+
+  Args:
+    u: `(xx, yy)`` variable array with values within ``[0, 1]``.
+    radius: Radius of the conical filter used to blur ``u``.
+    alpha: Float within ``[0, 1]`` controlling binarization of the density,
+      where ``0`` denotes no binarization, and ``1`` denotes full binarization
+      of all pixels except those on boundaries (as given by ``eta``) which are
+      left unchanged (equal to the ``alpha = 0`` case).
+    c: Controls the detection of inflection points.
+    eta: Threshold value used to binarize the density.
+    eta_lo: Controls minimum feature size of void-phase features.
+    eta_hi: Controls minimum feature size of ``density = 1`` features.
+
+  Returns:
+    ``(density, loss)`` arrays, both of shape ``(xx, yy)``, corresponding to
+    the pixel density and the minimum feature size loss respectively.
+
+  """
   ufilt = _filter(u, radius)
   uproj = _project(ufilt, eta)
   return (alpha * uproj + (1 - alpha) * ufilt,
