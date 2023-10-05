@@ -60,24 +60,19 @@ def _curl(beta, arr, is_forward):
   )
 
 
-def _addez(beta, epsilon, v):
-  """Get the full E-field from the solution that only has Ex and Ey."""
-  dx = partial(_diff, axis=-3, is_forward=False)
-  dy = partial(_diff, axis=-2, is_forward=False)
-  eps_xy = epsilon[(0, 1), :, :]
-  eps_z = epsilon[2, :, :]
-
-  # v *= eps_xy
-  w = eps_xy * v
-  return jnp.stack([v[0], v[1], (dx(w[0]) + dy(w[1])) / (1j * beta * eps_z)])
+def _fullh(beta, v):
+  """Get the full H-field from the solution that only has Hx and Hy."""
+  dx = partial(_diff, axis=-3, is_forward=True)
+  dy = partial(_diff, axis=-2, is_forward=True)
+  return jnp.stack([v[0], v[1], (dx(v[0]) + dy(v[1])) / (1j * beta)])
 
 
 def _check_it(beta, omega, epsilon, v):
-  e = _addez(beta, epsilon, v)
-  h = _curl(beta, e, is_forward=True) / (-1j * omega)
-  e2 = _curl(beta, h, is_forward=False) / (1j * omega * epsilon)
+  h = _fullh(beta, v)
+  e = _curl(beta, h, is_forward=False) / (1j * omega * epsilon)
+  h2 = _curl(beta, e, is_forward=True) / (-1j * omega)
 
-  return e, h, e2
+  return h, e, h2
 
 
 def _subspace_iteration(op, x, n, tol):
