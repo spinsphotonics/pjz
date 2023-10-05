@@ -45,16 +45,17 @@ def test_check_it(i, expected):
   xx, yy = 30, 20
   omega = (2 * np.pi / 37)
   epsilon = np.ones((3, xx, yy, 1))
-  # epsilon[:, 9:21, 8:12, 0] = 12.25
+  epsilon[:, 9:21, 8:12, 0] = 12.25
   beta, field, err, iters = pjz.mode(
       epsilon=epsilon,
       omega=omega,
       num_modes=i + 1,
   )
-  e, h, e2 = pjz._mode._check_it(beta[i], omega, epsilon, field[..., i])
-  # np.testing.assert_allclose(e[0], e2[0], rtol=1e-2)
+  f = np.array([-1, 1])[:, None, None, None] * field[(1, 0), ..., i]
+  e, h, e2 = pjz._mode._check_it(beta[i], omega, epsilon, f)
+  np.testing.assert_allclose(e[0], e2[0])
   # np.testing.assert_allclose(e[1], e2[1], rtol=1e-2)
-  np.testing.assert_allclose(e[2], e2[2], rtol=1e-2)
+  # np.testing.assert_allclose(e[2], e2[2], rtol=1e-2)
 
 
 # def test_no_propagating_mode():
