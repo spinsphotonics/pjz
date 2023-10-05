@@ -1,5 +1,6 @@
 """Waveguide modes."""
 
+from functools import partial
 from typing import Optional, Tuple
 
 import jax
@@ -42,6 +43,40 @@ def _operator(epsilon, omega, shift):
     c = jnp.stack([_diff(c, -3, False), _diff(c, -2, False)])
     return a + b + c
   return _apply
+
+
+def _cross(arr, dx, dy, dz):
+  fx, fy, fz = arr[0], arr[1], arr[2]
+  return jnp.stack([dy(fz) - dz(fy), dz(fx) - dx(fz), dx(fy) - dy(fx)])
+
+
+def _curl(beta, arr, is_forward):
+  """Apply the curl operator to electric field of shape ``(3, xx, yy, num_modes)``."""
+  return _cross(
+      arr,
+      dx=partial(_diff, axis=-3, is_forward=is_forward),
+      dy=partial(_diff, axis=-2, is_forward=is_forward),
+      dz=lambda x: -1j * beta * x,
+  )
+
+
+def _addez(beta, epsilon, v):
+  """Get the full E-field from the solution that only has Ex and Ey."""
+  dx = partial(_diff, axis=-3, is_forward=False)
+  dy = partial(_diff, axis=-2, is_forward=False)
+  eps_xy = epsilon[(0, 1), :, :]
+  eps_z = epsilon[2, :, :]
+
+  w = eps_xy * v
+  return jnp.stack([v[0], v[1], (dx(w[0]) + dy(w[1])) / (1j * beta * eps_z)])
+
+
+def _check_it(beta, omega, epsilon, v):
+  e = _addez(beta, epsilon, v)
+  h = _curl(beta, e, is_forward=True) / (-1j * omega)
+  e2 = _curl(beta, h, is_forward=False) / (1j * omega * epsilon)
+
+  return e, h, e2
 
 
 def _subspace_iteration(op, x, n, tol):
@@ -161,7 +196,6 @@ def mode(
   x = jnp.flip(x, axis=0)  # Field-to-excitation flip.
 
   # Convert to output form.
-
   wavevector = jnp.sqrt(w + shift)
   if prop_axis == "y":
     x = jnp.swapaxes(jnp.flip(x[(1, 0), ...], axis=1), 1, 2)
