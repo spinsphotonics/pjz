@@ -67,6 +67,7 @@ def _addez(beta, epsilon, v):
   eps_xy = epsilon[(0, 1), :, :]
   eps_z = epsilon[2, :, :]
 
+  # v *= eps_xy
   w = eps_xy * v
   return jnp.stack([v[0], v[1], (dx(w[0]) + dy(w[1])) / (1j * beta * eps_z)])
 
