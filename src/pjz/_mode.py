@@ -161,6 +161,7 @@ def mode(
   x = jnp.flip(x, axis=0)  # Field-to-excitation flip.
 
   # Convert to output form.
+
   wavevector = jnp.sqrt(w + shift)
   if prop_axis == "y":
     x = jnp.swapaxes(jnp.flip(x[(1, 0), ...], axis=1), 1, 2)
