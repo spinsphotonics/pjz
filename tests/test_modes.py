@@ -5,9 +5,9 @@ import pytest
 
 
 def test_mode_output_is_float32():
-  xx, yy = 30, 20
+  xx, yy = 40, 20
   epsilon = np.ones((3, xx, yy, 1))
-  epsilon[:, 9:21, 8:12, 0] = 12.25
+  epsilon[:, 9:31, 8:12, 0] = 12.25
   beta, field, err, iters = pjz.mode(
       epsilon=epsilon,
       omega=(2 * np.pi / 37),
@@ -35,27 +35,22 @@ def test_find_pjz(i, expected):
   assert beta[i] == pytest.approx(expected, rel=1e-3)
 
 
-@pytest.mark.parametrize("i,expected", [
-    (0, 0.36388508),
-    # (1, 0.18891069),
-    # (2, 0.15406249),
-    # (3, 0.13549446),
-])
-def test_check_it(i, expected):
-  xx, yy = 30, 20
+@pytest.mark.parametrize("i", [0, 1, 2, 3])
+def test_check_it(i):
+  xx, yy = 40, 30
   omega = (2 * np.pi / 37)
   epsilon = np.ones((3, xx, yy, 1))
-  epsilon[:, 9:21, 8:12, 0] = 12.25
+  epsilon[0, 9:30, 10:19, 0] = 12.25
+  epsilon[1, 9:31, 10:18, 0] = 12.25
+  epsilon[2, 9:31, 10:19, 0] = 12.25
   beta, field, err, iters = pjz.mode(
       epsilon=epsilon,
       omega=omega,
       num_modes=i + 1,
   )
   f = np.array([-1, 1])[:, None, None, None] * field[(1, 0), ..., i]
-  e, h, e2 = pjz._mode._check_it(beta[i], omega, epsilon, f)
-  np.testing.assert_allclose(e[0], e2[0])
-  # np.testing.assert_allclose(e[1], e2[1], rtol=1e-2)
-  # np.testing.assert_allclose(e[2], e2[2], rtol=1e-2)
+  h, e, h2 = pjz._mode._check_it(beta[i], omega, epsilon, f)
+  assert np.linalg.norm(h - h2) / np.linalg.norm(h) < 1e-2
 
 
 # def test_no_propagating_mode():
