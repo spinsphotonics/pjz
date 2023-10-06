@@ -35,8 +35,9 @@ def test_find_pjz(i, expected):
   assert beta[i] == pytest.approx(expected, rel=1e-3)
 
 
+# TODO: Do this for other directions as well?
 @pytest.mark.parametrize("i", [0, 1, 2, 3])
-def test_check_it(i):
+def test_full_fields(i):
   xx, yy = 40, 30
   omega = (2 * np.pi / 37)
   epsilon = np.ones((3, xx, yy, 1))
@@ -49,8 +50,27 @@ def test_check_it(i):
       num_modes=i + 1,
   )
   f = np.array([-1, 1])[:, None, None, None] * field[(1, 0), ..., i]
-  h, e, h2 = pjz._mode._check_it(beta[i], omega, epsilon, f)
+  h, e, h2 = pjz._mode._full_fields(beta[i], omega, epsilon, f)
   assert np.linalg.norm(h - h2) / np.linalg.norm(h) < 1e-2
+
+
+@pytest.mark.parametrize("i", [0])
+def test_power_unity(i):
+  xx, yy = 40, 30
+  omega = (2 * np.pi / 37)
+  epsilon = np.ones((3, xx, yy, 1))
+  epsilon[0, 9:30, 10:19, 0] = 12.25
+  epsilon[1, 9:31, 10:18, 0] = 12.25
+  epsilon[2, 9:31, 10:19, 0] = 12.25
+  beta, field, err, iters = pjz.mode(
+      epsilon=epsilon,
+      omega=omega,
+      num_modes=i + 1,
+  )
+  f = np.array([-1, 1])[:, None, None, None] * field[(1, 0), ..., i]
+  h, e, h2 = pjz._mode._full_fields(beta[i], omega, epsilon, f)
+  np.testing.assert_array_almost_equal(
+      np.sum(e[0] * h[1] - e[1] * h[0], axis=(0, 1, 2)), 1)
 
 
 # def test_no_propagating_mode():

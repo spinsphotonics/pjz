@@ -51,7 +51,7 @@ def _cross(arr, dx, dy, dz):
 
 
 def _curl(beta, arr, is_forward):
-  """Apply the curl operator to electric field of shape ``(3, xx, yy, num_modes)``."""
+  """Apply the curl operator to field of shape ``(3, xx, yy, num_modes)``."""
   return _cross(
       arr,
       dx=partial(_diff, axis=-3, is_forward=is_forward),
@@ -60,15 +60,21 @@ def _curl(beta, arr, is_forward):
   )
 
 
-def _fullh(beta, v):
-  """Get the full H-field from the solution that only has Hx and Hy."""
+def _fullh(beta, x):
+  """Get the full H-field."""
   dx = partial(_diff, axis=-3, is_forward=True)
   dy = partial(_diff, axis=-2, is_forward=True)
-  return jnp.stack([v[0], v[1], (dx(v[0]) + dy(v[1])) / (1j * beta)])
+  return jnp.stack([x[0], x[1], (dx(x[0]) + dy(x[1])) / (1j * beta)])
 
 
-def _check_it(beta, omega, epsilon, v):
-  h = _fullh(beta, v)
+def _poynting(beta, omega, epsilon, x):
+  h = _fullh(beta, x)
+  e = _curl(beta, h, is_forward=False) / (1j * omega * epsilon[..., None])
+  return jnp.real(jnp.sum(e[0] * h[1] - e[1] * h[0], axis=(0, 1, 2)))
+
+
+def _full_fields(beta, omega, epsilon, x):
+  h = _fullh(beta, x)
   e = _curl(beta, h, is_forward=False) / (1j * omega * epsilon)
   h2 = _curl(beta, e, is_forward=True) / (-1j * omega)
 
@@ -166,9 +172,7 @@ def mode(
   if prop_axis == "x":
     epsilon = epsilon[(1, 2, 0), ...]
   elif prop_axis == "y":
-    # TODO: Need to fix this...
     epsilon = jnp.flip(jnp.swapaxes(epsilon[(2, 0, 1), ...], 1, 3), axis=1)
-    # TODO: May need to scale one of the components by `-1`.
     init = jnp.flip(jnp.swapaxes(init[(1, 0), ...], 1, 3), axis=1)
 
   epsilon = jnp.squeeze(epsilon)
@@ -189,14 +193,20 @@ def mode(
       max_iters,
       tol,
   )
-  x = jnp.flip(x, axis=0)  # Field-to-excitation flip.
+
+  wavevector = jnp.sqrt(w + shift)
+
+  # TODO: Normalize the mode.
+  x /= jnp.sqrt(_poynting(wavevector, omega, epsilon, x))
+  print(f"{_poynting(wavevector, omega, epsilon, x)}")
+
+  exc = jnp.flip(x, axis=0)  # Field-to-excitation flip.
 
   # Convert to output form.
-  wavevector = jnp.sqrt(w + shift)
   if prop_axis == "y":
-    x = jnp.swapaxes(jnp.flip(x[(1, 0), ...], axis=1), 1, 2)
+    exc = jnp.swapaxes(jnp.flip(exc[(1, 0), ...], axis=1), 1, 2)
   if prop_axis == "z":
-    x *= jnp.array([1, -1])[:, None, None, None]
-  excitation = jnp.expand_dims(x, "xyz".index(prop_axis) + 1)
+    exc *= jnp.array([1, -1])[:, None, None, None]
+  exc = jnp.expand_dims(exc, "xyz".index(prop_axis) + 1)
 
-  return wavevector, excitation, err, iters
+  return wavevector, exc, err, iters
