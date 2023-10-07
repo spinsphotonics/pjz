@@ -198,7 +198,6 @@ def mode(
 
   # TODO: Normalize the mode.
   x /= jnp.sqrt(_poynting(wavevector, omega, epsilon, x))
-  print(f"{_poynting(wavevector, omega, epsilon, x)}")
 
   exc = jnp.flip(x, axis=0)  # Field-to-excitation flip.
 
