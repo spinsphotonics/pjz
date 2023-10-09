@@ -282,8 +282,8 @@ def _amplitudes(beta, vals):
                  jnp.exp(1j * beta[:, None] * x)], axis=1)
   # jax.debug.print(f"a has shape {a.shape}")
   # jax.debug.print("{a}", a=a)
-  pinva = jnp.linalg.pinv(a)
-  # jax.debug.print(f"pinv(a) {pinva.shape}")
+  # pinva = jnp.linalg.pinv(a)
+  # jax.debug.print(f"pinv(a) {beta.shape} {a.shape} {pinva.shape}")
   return jnp.einsum("...ji,...j->...i", jnp.linalg.pinv(a), vals)
 
 
@@ -301,6 +301,7 @@ def _overlap(mode, beta, pos, is_fwd, output):
       [jnp.sum(mode * _transverse_slice(output, p, _prop_axis(mode)),
                axis=(-4, -3, -2, -1)) for p in sample_at],
       axis=-1)
+  # print(f"{beta.shape} {vals.shape}")
   # jax.debug.print(f"vals shape is {vals.shape}")
   # jax.debug.print("vals {vals}", vals=vals)
   return _amplitudes(beta, vals)
@@ -323,9 +324,23 @@ def _scatter_impl(epsilon, omega, modes, betas, pos, is_fwd, sim_params):
                 source_pos=p)
             for (m, p) in zip(modes, pos)]
 
+  # Detect injected fields.
+  injected_amplitudes = [
+      _overlap(m, b, p, fwd, f)
+      for f, m, b, p, fwd in zip(fields, modes, betas, pos, is_fwd)]
+
+  # Normalize by injected amplitudes.
+  fields = [f / a[:, None, None, None, None, 0]
+            for f, a in zip(fields, injected_amplitudes)]
+
   # Scattering values.
   amplitudes = [[_overlap(m, b, p, fwd, f) for f in fields]
                 for m, b, p, fwd in zip(modes, betas, pos, is_fwd)]
+
+  # Normalize fields by their injected powers.
+
+  # print(f"{amplitudes[0][0].shape}")
+  # jax.debug.print("{a}", a=amplitudes)
   svals = [[a[..., 1] / amps[i][..., 0] for a in amps]
            for i, amps in enumerate(amplitudes)]
 
@@ -342,12 +357,12 @@ def _scatter_fwd(epsilon, omega, modes, betas, pos, is_fwd, sim_params):
   return svals, grads
 
 
-def _scatter_bwd(pos, sim_params, grad, g):
+def _scatter_bwd(pos, is_fwd, sim_params, grad, g):
   gradient = sum(
       sum(jnp.sum(jnp.real(gij[:, None, None, None, None] * gradij), axis=0)
           for gradij, gij in zip(gradi, gi))
       for gradi, gi in zip(grad, g))
-  return gradient, None, None
+  return gradient, None, None, None
 
 
 # TODO: Either move ``pos`` into ``modes``, but let's not have to static it
