@@ -276,8 +276,8 @@ def _prop_axis(mode):
         f"instead got ``mode.shape == {{mode.shape}}``.")
 
 
-def _amplitudes(beta, vals):
-  x = jnp.arange(vals.shape[-1])
+def _amplitudes(beta, vals, x):
+  # x = jnp.arange(vals.shape[-1])
   a = jnp.stack([jnp.exp(-1j * beta[:, None] * x),
                  jnp.exp(1j * beta[:, None] * x)], axis=1)
   # jax.debug.print(f"a has shape {a.shape}")
@@ -304,7 +304,8 @@ def _overlap(mode, beta, pos, is_fwd, output):
   # print(f"{beta.shape} {vals.shape}")
   # jax.debug.print(f"vals shape is {vals.shape}")
   # jax.debug.print("vals {vals}", vals=vals)
-  return _amplitudes(beta, vals)
+  x = jnp.array([1, 2]) if is_fwd else jnp.array([-2, -1])
+  return _amplitudes(beta, vals, x)
 
   # TODO: Remove.
   # jnp._transverse_slice(output, p, _prop_axis(mode))
@@ -325,28 +326,30 @@ def _scatter_impl(epsilon, omega, modes, betas, pos, is_fwd, sim_params):
             for (m, p) in zip(modes, pos)]
 
   # Detect injected fields.
-  injected_amplitudes = [
-      _overlap(m, b, p, fwd, f)
-      for f, m, b, p, fwd in zip(fields, modes, betas, pos, is_fwd)]
+  amplitudes = [_overlap(m, b, p, fwd, f)[:, 0]
+                for f, m, b, p, fwd in zip(fields, modes, betas, pos, is_fwd)]
 
-  # Normalize by injected amplitudes.
-  fields = [f / a[:, None, None, None, None, 0]
-            for f, a in zip(fields, injected_amplitudes)]
+  # # Normalize by injected amplitudes.
+  # fields = [f / a[:, None, None, None, None, 0]
+  #           for f, a in zip(fields, injected_amplitudes)]
 
   # Scattering values.
-  amplitudes = [[_overlap(m, b, p, fwd, f) for f in fields]
-                for m, b, p, fwd in zip(modes, betas, pos, is_fwd)]
+  svals = [[_overlap(m, b, p, fwd, f)[:, 1] / a
+            for m, b, p, fwd in zip(modes, betas, pos, is_fwd)]
+           for a, f in zip(amplitudes, fields)]
+  # svals = [[_overlap(m, p, f) for f in fields] for (m, p) in zip(modes, pos)]
 
   # Normalize fields by their injected powers.
 
   # print(f"{amplitudes[0][0].shape}")
   # jax.debug.print("{a}", a=amplitudes)
-  svals = [[a[..., 1] / amps[i][..., 0] for a in amps]
-           for i, amps in enumerate(amplitudes)]
+  # svals = [[a] for a in amps] for ia, amps in zip(injected_amplitudes, amplitudes)]
 
   # TODO: Need to scale the gradients?
   # Gradient of scattering values w.r.t. ``epsilon``.
-  grads = [[fi * fj for fj in fields] for fi in fields]
+  grads = [[fi * fj / a[:, None, None, None, None]
+            for fj in fields]
+           for a, fi in zip(amplitudes, fields)]
 
   return svals, grads, fields
 
