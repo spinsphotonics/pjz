@@ -4,17 +4,24 @@ import numpy as np
 import pytest
 
 
-def test_mode_output_is_float32():
+def test_mode_output_is_float32_and_correct_shape():
   xx, yy = 40, 20
   epsilon = np.ones((3, xx, yy, 1))
   epsilon[:, 9:31, 8:12, 0] = 12.25
+  omega = np.linspace(2 * np.pi / 37, 2 * np.pi / 31, 5)
   beta, field, err, iters = pjz.mode(
       epsilon=epsilon,
-      omega=(2 * np.pi / 37),
-      num_modes=1,
+      omega=omega,
+      num_modes=9,
+      max_iters=10,  # Don't seriously attempt a solve.
   )
   assert beta.dtype == np.float32
   assert field.dtype == np.float32
+  assert err.dtype == np.float32
+
+  assert beta.shape == (5, 9)
+  assert field.shape == (5, 2, xx, yy, 1, 9)
+  assert err.shape == (5, 9)
 
 
 @pytest.mark.parametrize("i,expected", [
