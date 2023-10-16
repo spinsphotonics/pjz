@@ -2,6 +2,7 @@
 
 from functools import partial
 from typing import Optional, Tuple
+from warnings import warn
 
 import jax
 import jax.numpy as jnp
@@ -52,8 +53,8 @@ def _operator(epsilon, omega, shift):
 
 def _cross(arr, dx, dy, dz):
   fx, fy, fz = arr[:, 0], arr[:, 1], arr[:, 2]
-  jax.debug.print("{x} {y} {z}, {x1} {y1} {z1}", x=fx.shape, y=fy.shape,
-                  z=fz.shape, x1=dx(fz).shape, y1=dy(fx).shape, z1=dz(fx).shape)
+  # jax.debug.print("{x} {y} {z}, {x1} {y1} {z1}", x=fx.shape, y=fy.shape,
+  #                 z=fz.shape, x1=dx(fz).shape, y1=dy(fx).shape, z1=dz(fx).shape)
   return jnp.stack([dy(fz) - dz(fy), dz(fx) - dx(fz), dx(fy) - dy(fx)], axis=1)
 
 
@@ -81,15 +82,18 @@ def _poynting(beta, omega, epsilon, x):
   h = _fullh(beta, x)
   e = _curl(beta, h, is_forward=False) / \
       (1j * omega[:, None, None, None, None] * epsilon[None, ..., None])
-  return jnp.real(jnp.sum(e[:, 0] * h[:, 1] - e[:, 1] * h[:, 0], axis=(1, 2, 3)))
+  return jnp.real(jnp.sum(e[:, 0] * h[:, 1] - e[:, 1] * h[:, 0], axis=(1, 2)))
 
 
 def _full_fields(beta, omega, epsilon, x):
+  # jax.debug.print("shapes {b} {x}", b=beta.shape, x=x.shape)
   h = _fullh(beta, x)
+  # jax.debug.print("h shape {h}", h=h.shape)
   e = _curl(beta, h, is_forward=False) / (
       1j * omega[:, None, None, None, None] * epsilon[None, ..., None])
+  # jax.debug.print("e shape {e}", e=e.shape)
   h2 = _curl(beta, e, is_forward=True) / \
-      (-1j * omega[:, None, None, None, None, None])
+      (-1j * omega[:, None, None, None, None])
 
   return h, e, h2
 
@@ -176,6 +180,11 @@ def mode(
     such that ``i == 0`` corresponds to the fundamental mode.
 
   """
+  if type(omega) == float or omega.shape == ():
+    omega = jnp.array([omega])
+    warn("mode() expects the ``omega`` parameter to have shape ``(ww,)``, "
+         "but got scalar instead.")
+
   if not (1 in epsilon.shape):
     raise ValueError(
         f"Expected exactly one of the spatial dimensions of ``epsilon`` to be "
@@ -193,7 +202,8 @@ def mode(
     epsilon = epsilon[(1, 2, 0), ...]
   elif prop_axis == "y":
     epsilon = jnp.flip(jnp.swapaxes(epsilon[(2, 0, 1), ...], 1, 3), axis=1)
-    init = jnp.flip(jnp.swapaxes(init[(1, 0), ...], 1, 3), axis=1)
+    init = jnp.flip(jnp.swapaxes(init, 2, 4), axis=(1, 2))
+    mode_shape = tuple(mode_shape[i] for i in (0, 1, 3, 2, 4))
 
   epsilon = jnp.squeeze(epsilon)
   init = jnp.reshape(init, mode_shape)
@@ -218,15 +228,21 @@ def mode(
 
   # Normalize the modes.
   x /= jnp.sqrt(_poynting(wavevector, omega, epsilon, x)
-                )[:, None, None, None, None]
+                )[:, None, None, None, :]
+  # jax.debug.print("x shape {x}", x=x.shape)
 
   exc = jnp.flip(x, axis=1)  # Field-to-excitation flip.
 
   # Convert to output form.
   if prop_axis == "y":
-    exc = jnp.swapaxes(jnp.flip(exc[:, (1, 0), ...], axis=2), 2, 3)
-  if prop_axis == "z":
+    exc = jnp.swapaxes(jnp.flip(exc, axis=(1, 2)), 2, 3)
+    # jax.debug.print("y exc shape {exc}", exc=exc.shape)
+  elif prop_axis == "z":
     exc *= jnp.array([1, -1])[None, :, None, None, None]
+    # jax.debug.print("z exc shape {exc}", exc=exc.shape)
+  # jax.debug.print("exc shape {exc}", exc=exc.shape)
   exc = jnp.expand_dims(exc, "xyz".index(prop_axis) + 2)
+
+  # jax.debug.print("exc shape {exc}", exc=exc.shape)
 
   return wavevector, exc, err, iters

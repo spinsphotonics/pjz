@@ -284,6 +284,7 @@ def _amplitudes(beta, vals, x):
   # jax.debug.print("{a}", a=a)
   # pinva = jnp.linalg.pinv(a)
   # jax.debug.print(f"pinv(a) {beta.shape} {a.shape} {pinva.shape}")
+  # jax.debug.print(f"vals {vals.shape}")
   return jnp.einsum("...ji,...j->...i", jnp.linalg.pinv(a), vals)
 
 

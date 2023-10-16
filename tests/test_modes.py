@@ -4,10 +4,12 @@ import numpy as np
 import pytest
 
 
-def test_mode_output_is_float32_and_correct_shape():
-  xx, yy = 40, 20
-  epsilon = np.ones((3, xx, yy, 1))
-  epsilon[:, 9:31, 8:12, 0] = 12.25
+@pytest.mark.parametrize("prop_axis", ["x", "y", "z"])
+def test_mode_output_is_float32_and_correct_shape(prop_axis):
+  uu, vv = 30, 20
+  epsilon = np.ones((3, uu, vv))
+  epsilon[:, 9:21, 8:12] = 12.25
+  epsilon = np.expand_dims(epsilon, axis="xyz".find(prop_axis) + 1)
   omega = np.linspace(2 * np.pi / 37, 2 * np.pi / 31, 5)
   beta, field, err, iters = pjz.mode(
       epsilon=epsilon,
@@ -20,91 +22,67 @@ def test_mode_output_is_float32_and_correct_shape():
   assert err.dtype == np.float32
 
   assert beta.shape == (5, 9)
-  assert field.shape == (5, 2, xx, yy, 1, 9)
+  if prop_axis == "x":
+    assert field.shape == (5, 2, 1, uu, vv, 9)
+  elif prop_axis == "y":
+    assert field.shape == (5, 2, uu, 1, vv, 9)
+  else:  # prop_axis == "z".
+    assert field.shape == (5, 2, uu, vv, 1, 9)
   assert err.shape == (5, 9)
 
 
-@pytest.mark.parametrize("i,expected", [
-    (0, 0.36388508),
-    (1, 0.18891069),
-    (2, 0.15406249),
-    (3, 0.13549446),
-])
-def test_find_pjz(i, expected):
-  xx, yy = 30, 20
-  epsilon = np.ones((3, xx, yy, 1))
-  epsilon[:, 9:21, 8:12, 0] = 12.25
+@pytest.mark.parametrize("prop_axis", ["x", "y", "z"])
+def test_correct_betas(prop_axis):
+  expected_betas = (0.36388508, 0.18891069, 0.15406249, 0.13549446)
+  omega = np.array([2 * np.pi / 37])
+  uu, vv = 30, 20
+  epsilon = np.ones((3, uu, vv))
+  epsilon[:, 9:21, 8:12] = 12.25
+  epsilon = np.expand_dims(epsilon, axis="xyz".find(prop_axis) + 1)
   beta, field, err, iters = pjz.mode(
       epsilon=epsilon,
-      omega=(2 * np.pi / 37),
-      num_modes=i + 1,
+      omega=omega,
+      num_modes=len(expected_betas),
   )
-  assert beta[i] == pytest.approx(expected, rel=1e-3)
+  assert beta[0, :] == pytest.approx(expected_betas, rel=1e-3)
 
 
 # TODO: Do this for other directions as well?
-@pytest.mark.parametrize("i", [0, 1, 2, 3])
-def test_full_fields(i):
-  xx, yy = 40, 30
-  omega = (2 * np.pi / 37)
-  epsilon = np.ones((3, xx, yy, 1))
-  epsilon[0, 9:30, 10:19, 0] = 12.25
-  epsilon[1, 9:31, 10:18, 0] = 12.25
-  epsilon[2, 9:31, 10:19, 0] = 12.25
+@pytest.mark.parametrize("prop_axis", ["x", "y", "z"])
+def test_full_fields(prop_axis):
+  ww, mm = 4, 2
+  omega = np.linspace(2 * np.pi / 37, 2 * np.pi / 36, ww)
+  uu, vv = 30, 20
+  epsilon = np.ones((3, uu, vv))
+  epsilon[:, 9:21, 8:12] = 12.25
+  epsilon = np.expand_dims(epsilon, axis="xyz".find(prop_axis) + 1)
+  # epsilon[0, 9:30, 10:19, 0] = 12.25
+  # epsilon[1, 9:31, 10:18, 0] = 12.25
+  # epsilon[2, 9:31, 10:19, 0] = 12.25
   beta, field, err, iters = pjz.mode(
       epsilon=epsilon,
       omega=omega,
-      num_modes=i + 1,
+      num_modes=mm,
   )
-  f = np.array([-1, 1])[:, None, None, None] * field[(1, 0), ..., i]
-  h, e, h2 = pjz._mode._full_fields(beta[i], omega, epsilon, f)
-  assert np.linalg.norm(h - h2) / np.linalg.norm(h) < 1e-2
 
+  if prop_axis == "x":
+    f = field[:, :, 0, :, :, :]
+    f = np.flip(f, axis=1)
+    epsilon = epsilon[(1, 2, 0), ...]
+    print("f shape", f.shape)
+  elif prop_axis == "y":
+    f = field[:, :, :, 0, :, :]
+    f = np.flip(np.swapaxes(f, 2, 3), axis=2)
+    epsilon = np.flip(np.swapaxes(epsilon[(2, 0, 1), ...], 1, 3), axis=1)
+  else:  # prop_axis == "z".
+    f = field[:, :, :, :, 0, :]
+    f = (np.array([-1, 1])[None, :, None, None, None] * np.flip(f, axis=1))
 
-@pytest.mark.parametrize("i", [0])
-def test_power_unity(i):
-  xx, yy = 40, 30
-  omega = (2 * np.pi / 37)
-  epsilon = np.ones((3, xx, yy, 1))
-  epsilon[0, 9:30, 10:19, 0] = 12.25
-  epsilon[1, 9:31, 10:18, 0] = 12.25
-  epsilon[2, 9:31, 10:19, 0] = 12.25
-  beta, field, err, iters = pjz.mode(
-      epsilon=epsilon,
-      omega=omega,
-      num_modes=i + 1,
-  )
-  f = np.array([-1, 1])[:, None, None, None] * field[(1, 0), ..., i]
-  h, e, h2 = pjz._mode._full_fields(beta[i], omega, epsilon, f)
+  h, e, h2 = pjz._mode._full_fields(beta, omega, np.squeeze(epsilon), f)
+
+  hflat, hflat2 = [x.reshape((ww, -1, mm)) for x in (h, h2)]
+  np.testing.assert_array_less(
+      np.linalg.norm(hflat - hflat2, axis=1) / np.linalg.norm(hflat, axis=1),
+      1e-2)
   np.testing.assert_array_almost_equal(
-      np.sum(e[0] * h[1] - e[1] * h[0], axis=(0, 1, 2)), 1)
-
-
-# def test_no_propagating_mode():
-#   xx, yy = 30, 20
-#   epsilon = np.ones((3, xx, yy))
-#   epsilon[:, 9:21, 8:12] = 12.25
-#   with pytest.raises(ValueError, match="No propagating mode found"):
-#     beta, field = pjz.waveguide(4, 2 * np.pi / 37, epsilon,
-#                                 np.ones((xx, 2)), np.ones((yy, 2)))
-#
-#
-# @pytest.mark.parametrize("i", [0, 1, 2, 3])
-# def test_double_curl(i):
-#   xx, yy = 30, 20
-#   epsilon = 1.5 * np.ones((3, xx, yy))
-#   epsilon[:, 9:21, 8:12] = 12.25
-#   omega = 2 * np.pi / 37
-#   dx, dy = np.ones((xx, 2)), np.ones((yy, 2))
-#   beta, field = pjz.waveguide(i, omega, epsilon, dx, dy)
-#   e2h, h2e = pjz.modes._conversion_operators(beta, omega, epsilon, dx, dy)
-#
-#   hfields = np.reshape(e2h @ np.ravel(field), field.shape)
-#   efields = np.reshape(h2e @ np.ravel(hfields), field.shape)
-#
-#   # Test that we can re-convert back to E-fields with the same result.
-#   np.testing.assert_array_almost_equal(efields, field)
-#
-#   # Test that the pwoer in the mode is `1`.
-#   assert pjz.modes._power_in_mode(
-#       field, beta, omega, epsilon, dx, dy) == pytest.approx(1.0)
+      np.sum(e[:, 0] * h[:, 1] - e[:, 1] * h[:, 0], axis=(1, 2)), 1)
