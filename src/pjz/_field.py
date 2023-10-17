@@ -148,6 +148,23 @@ def _output_phases(
   return jnp.concatenate([jnp.cos(theta), -jnp.sin(theta)], axis=0)
 
 
+def _transverse_slice(arr, pos, axis):
+  def is_axis(i):
+    return 3 - (arr.ndim - i) == "xyz".find(axis)
+
+  component_inds = [i for i in range(3) if i != "xyz".find(axis)]
+  arr = arr[..., component_inds, :, :, :]
+  return jax.lax.dynamic_slice(
+      arr,
+      start_indices=[pos if is_axis(i) else 0 for i in range(arr.ndim)],
+      slice_sizes=[1 if is_axis(i) else arr.shape[i] for i in range(arr.ndim)],
+  )
+
+
+def _source(mode, pos, epsilon):
+  return mode / _transverse_slice(epsilon, pos, _prop_axis(mode))
+
+
 # TODO: Use jax arrays for source_pos so we don't need to mark it as static.
 @partial(jax.jit, static_argnames=["source_pos", "sim_params"])
 def field(
@@ -189,6 +206,9 @@ def field(
   interval = _sampling_interval(
       omega_range[0], omega_range[1], omega.shape[0], dt)
   output_steps = (tt - 2 * interval * omega.shape[0] - 1, tt, interval)
+
+  # Multiply a factor of ``epsilon`` to the source term.
+  source = _source(source, source_pos, epsilon)
 
   # Manipulate source into the form that ``fdtdz_jax.fdtdz()`` expects.
   for i in range(3):
@@ -236,7 +256,10 @@ def field(
 
   # Convert to complex.
   output_phases = _output_phases(omega, output_steps, dt)
-  outputs = jnp.einsum('ij,j...->i...',
+
+  # TODO: There should be a cleaner way to do this (by doing the complex
+  # meddling implicitly instead).
+  outputs = jnp.einsum("ij,j...->i...",
                        jnp.linalg.pinv(output_phases.T),
                        fields)
   return outputs[:omega.shape[0]] + 1j * outputs[omega.shape[0]:]
@@ -245,75 +268,118 @@ def field(
 def _prop_axis(mode):
   # TODO: Move to a utils file, or better yet, move to modes with the full 3
   # components.
-  if mode.shape[1:].count(1) == 1:
-    return "xyz"[mode.shape[1:].index(1)]
+  if mode.shape[-3:].count(1) == 1:
+    return "xyz"[mode.shape[-3:].index(1)]
   else:
     raise ValueError(
-        f"``mode.shape[1:] must contain exactly one value of ``1``, "
+        f"``mode.shape[-3:]`` must contain exactly one value of ``1``, "
         f"instead got ``mode.shape == {{mode.shape}}``.")
 
 
-def _transverse_slice(arr, pos, axis):
-  def is_axis(i):
-    return 3 - (arr.ndim - i) == "xyz".find(axis)
-
-  component_inds = [i for i in range(3) if i != "xyz".find(axis)]
-  arr = arr[..., component_inds, :, :, :]
-  return jax.lax.dynamic_slice(
-      arr,
-      start_indices=[pos if is_axis(i) else 0 for i in range(arr.ndim)],
-      slice_sizes=[1 if is_axis(i) else arr.shape[i] for i in range(arr.ndim)],
-  )
-
-
-def _source(mode, pos, epsilon):
-  return mode / _transverse_slice(epsilon, pos, _prop_axis(mode))
+def _amplitudes(beta, vals, x):
+  # x = jnp.arange(vals.shape[-1])
+  a = jnp.stack([jnp.exp(-1j * beta[:, None] * x),
+                 jnp.exp(1j * beta[:, None] * x)], axis=1)
+  # jax.debug.print(f"a has shape {a.shape}")
+  # jax.debug.print("{a}", a=a)
+  # pinva = jnp.linalg.pinv(a)
+  # jax.debug.print(f"pinv(a) {beta.shape} {a.shape} {pinva.shape}")
+  # jax.debug.print(f"vals {vals.shape}")
+  return jnp.einsum("...ji,...j->...i", jnp.linalg.pinv(a), vals)
 
 
-def _overlap(mode, pos, output):
-  return jnp.sum(mode * _transverse_slice(output, pos, _prop_axis(mode)),
-                 axis=(-4, -3, -2, -1))
+def _overlap(mode, beta, pos, is_fwd, output):
+  # TODO: Remove.
+  # _prop_axis(mode)
+  # def is_axis(i):
+  #   return 3 - (arr.ndim - i) == "xyz".find(axis)
+
+  # TODO: Document the beta convention somewhere.
+  sample_at = ((pos + 1, pos + 2) if is_fwd else (pos - 2, pos - 1))
+  # jax.debug.print("sample_at {sample_at}", sample_at=sample_at)
+  beta *= 1 if is_fwd else -1
+  vals = jnp.stack(
+      [jnp.sum(mode * _transverse_slice(output, p, _prop_axis(mode)),
+               axis=(-4, -3, -2, -1)) for p in sample_at],
+      axis=-1)
+  # print(f"{beta.shape} {vals.shape}")
+  # jax.debug.print(f"vals shape is {vals.shape}")
+  # jax.debug.print("vals {vals}", vals=vals)
+  x = jnp.array([1, 2]) if is_fwd else jnp.array([-2, -1])
+  return _amplitudes(beta, vals, x)
+
+  # TODO: Remove.
+  # jnp._transverse_slice(output, p, _prop_axis(mode))
+  # return jnp.sum(mode * _transverse_slice(output, pos, _prop_axis(mode)),
+  #                axis=(-4, -3, -2, -1))
 
 
-def _scatter_impl(epsilon, omega, modes, pos, sim_params):
+def _scatter_impl(epsilon, omega, modes, betas, pos, is_fwd, sim_params):
   sim = partial(field, epsilon=epsilon, omega=omega, sim_params=sim_params)
 
   # Simulation output fields.
-  fields = [sim(source=_source(m, p, epsilon), source_pos=p)
+  #
+  # Because we can only use one source profile per simulation, we choose to
+  # use the average of the given source profiles.
+  #
+  fields = [sim(source=jnp.average(m, axis=0),  # _source(m, p, epsilon),
+                source_pos=p)
             for (m, p) in zip(modes, pos)]
 
-  # Scattering values.
-  svals = [[_overlap(m, p, f) for f in fields] for (m, p) in zip(modes, pos)]
+  # Detect injected fields.
+  amplitudes = [_overlap(m, b, p, fwd, f)[:, 0]
+                for f, m, b, p, fwd in zip(fields, modes, betas, pos, is_fwd)]
 
+  # # Normalize by injected amplitudes.
+  # fields = [f / a[:, None, None, None, None, 0]
+  #           for f, a in zip(fields, injected_amplitudes)]
+
+  # Scattering values.
+  svals = [[_overlap(m, b, p, fwd, f)[:, 1] / a
+            for m, b, p, fwd in zip(modes, betas, pos, is_fwd)]
+           for a, f in zip(amplitudes, fields)]
+  # svals = [[_overlap(m, p, f) for f in fields] for (m, p) in zip(modes, pos)]
+
+  # Normalize fields by their injected powers.
+
+  # print(f"{amplitudes[0][0].shape}")
+  # jax.debug.print("{a}", a=amplitudes)
+  # svals = [[a] for a in amps] for ia, amps in zip(injected_amplitudes, amplitudes)]
+
+  # TODO: Need to scale the gradients?
   # Gradient of scattering values w.r.t. ``epsilon``.
-  grads = [[fi * fj for fj in fields] for fi in fields]
+  grads = [[fi * fj / a[:, None, None, None, None]
+            for fj in fields]
+           for a, fi in zip(amplitudes, fields)]
 
   return svals, grads, fields
 
 
-def _scatter_fwd(epsilon, omega, modes, pos, sim_params):
+def _scatter_fwd(epsilon, omega, modes, betas, pos, is_fwd, sim_params):
   svals, grads, _ = _scatter_impl(
-      epsilon, omega, modes, pos, sim_params)
+      epsilon, omega, modes, betas, pos, is_fwd, sim_params)
   return svals, grads
 
 
-def _scatter_bwd(pos, sim_params, grad, g):
+def _scatter_bwd(pos, is_fwd, sim_params, grad, g):
   gradient = sum(
       sum(jnp.sum(jnp.real(gij[:, None, None, None, None] * gradij), axis=0)
           for gradij, gij in zip(gradi, gi))
       for gradi, gi in zip(grad, g))
-  return gradient, None, None
+  return gradient, None, None, None
 
 
 # TODO: Either move ``pos`` into ``modes``, but let's not have to static it
 # anymore.
-@partial(jax.custom_vjp, nondiff_argnums=(3, 4))
-@partial(jax.jit, static_argnums=(3, 4))
+@partial(jax.custom_vjp, nondiff_argnums=(4, 5, 6))
+@partial(jax.jit, static_argnums=(4, 5, 6))
 def scatter(
     epsilon: jax.Array,
     omega: jax.Array,
     modes: Tuple[jax.Array],
+    betas: Tuple[jax.Array],
     pos: Tuple[int],
+    is_fwd: Tuple[bool],
     sim_params: SimParams,
 ):
   """Differentiable time-harmonic scattering values between ``modes``.
@@ -321,12 +387,17 @@ def scatter(
   Args:
     epsilon: ``(3, xx, yy, zz)`` array of permittivity values. Differentiable.
     omega: ``(ww,)`` array of angular frequencies.
-    modes: ``(2, xx, yy, zz)`` arrays with exactly one singular spatial
+    modes: ``(ww, 2, xx, yy, zz)`` arrays with exactly one singular spatial
       dimension identifying the "ports" to be used when computing scattering
       parameters.
-    pos: Integers denoting the location of modes along their respective
-      propagation axes.
-    sim_params: Simulation parameters.
+    betas: ``(ww,)`` shaped arrays denoting wavevector of modes.
+    pos: Tuple of integers of length ``len(modes)`` indicating the location of
+      modes along their respective propagation axes.
+    is_fwd: Tuple of booleans of length ``len(modes)`` indicating source
+      directionality, where ``True`` corresponds to propagation along the
+      positive direction of propagation axis, and ``False`` corresponds to
+      propagation along the negative direction.
+    sim_params: Denotes simulation parameters to pass to ``fdtdz_jax.fdtdz()``.
 
   Returns:
     Scattering values as ``svals[i][j]`` nested lists of ``(ww,)`` arrays
@@ -334,7 +405,8 @@ def scatter(
     frequencies ``omega``.
 
   """
-  svals, _, _ = _scatter_impl(epsilon, omega, modes, pos, sim_params)
+  svals, _, _ = _scatter_impl(
+      epsilon, omega, modes, betas, pos, is_fwd, sim_params)
   return svals
 
 
