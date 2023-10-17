@@ -390,12 +390,14 @@ def scatter(
     modes: ``(ww, 2, xx, yy, zz)`` arrays with exactly one singular spatial
       dimension identifying the "ports" to be used when computing scattering
       parameters.
-      TODO: Consider allowing for backward compatible shape ``(2, xx, yy, zz)``
     betas: ``(ww,)`` shaped arrays denoting wavevector of modes.
-    pos: Integers denoting the location of modes along their respective
-      propagation axes.
-    is_fwd: Indicates directionality.
-    sim_params: Simulation parameters.
+    pos: Tuple of integers of length ``len(modes)`` indicating the location of
+      modes along their respective propagation axes.
+    is_fwd: Tuple of booleans of length ``len(modes)`` indicating source
+      directionality, where ``True`` corresponds to propagation along the
+      positive direction of propagation axis, and ``False`` corresponds to
+      propagation along the negative direction.
+    sim_params: Denotes simulation parameters to pass to ``fdtdz_jax.fdtdz()``.
 
   Returns:
     Scattering values as ``svals[i][j]`` nested lists of ``(ww,)`` arrays

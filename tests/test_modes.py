@@ -47,6 +47,33 @@ def test_correct_betas(prop_axis):
   assert beta[0, :] == pytest.approx(expected_betas, rel=1e-3)
 
 
+@pytest.mark.parametrize("prop_axis", ["x", "y", "z"])
+def test_init(prop_axis):
+  omega = np.array([2 * np.pi / 37])
+  num_modes = 1
+  uu, vv = 30, 20
+  epsilon = np.ones((3, uu, vv))
+  epsilon[:, 9:21, 8:12] = 12.25
+  epsilon = np.expand_dims(epsilon, axis="xyz".find(prop_axis) + 1)
+
+  # Initial solve.
+  beta, field, _, _ = pjz.mode(
+      epsilon=epsilon,
+      omega=omega,
+      num_modes=num_modes
+  )
+
+  # Updated solve.
+  beta2, _, _, iters = pjz.mode(
+      epsilon=epsilon,
+      omega=omega,
+      init=field,
+      num_modes=num_modes,
+  )
+  np.testing.assert_array_almost_equal(beta, beta2, decimal=3)
+  assert iters == 1
+
+
 # TODO: Do this for other directions as well?
 @pytest.mark.parametrize("prop_axis", ["x", "y", "z"])
 def test_full_fields(prop_axis):

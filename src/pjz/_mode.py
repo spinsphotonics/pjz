@@ -173,7 +173,7 @@ def mode(
 
   Returns:
     ``(wavevector, excitation, err, iters)`` where 
-    ``iters`` is the number of executed solver iterations, and
+    ``iters`` is the number of executed solver iterations,
     ``excitation.shape == (ww, 2, xx, yy, zz, num_modes)`` and
     ``wavevector.shape == err.shape == (ww, num_modes)``, with 
     ``excitation[..., i]``, ``wavevector[i]``, and ``err[i]``  being ordered
@@ -195,14 +195,23 @@ def mode(
                 jnp.squeeze(epsilon).shape[1:] + (num_modes,))
 
   if init is None:
-      init = _random(mode_shape)
+    init = _random(mode_shape)
+  else:
+    init = jnp.squeeze(init, "xyz".index(prop_axis) + 2)
+
+    # Convert to output form.
+    if prop_axis == "y":
+      init = jnp.flip(jnp.swapaxes(init, 2, 3), axis=(1, 2))
+    elif prop_axis == "z":
+      init *= jnp.array([1, -1])[None, :, None, None, None]
+
+    init = jnp.flip(init, axis=1)  # Excitation-to-field flip.
 
   # Prepare inputs into "propagate-along-z" form.
   if prop_axis == "x":
     epsilon = epsilon[(1, 2, 0), ...]
   elif prop_axis == "y":
     epsilon = jnp.flip(jnp.swapaxes(epsilon[(2, 0, 1), ...], 1, 3), axis=1)
-    init = jnp.flip(jnp.swapaxes(init, 2, 4), axis=(1, 2))
     mode_shape = tuple(mode_shape[i] for i in (0, 1, 3, 2, 4))
 
   epsilon = jnp.squeeze(epsilon)
@@ -219,7 +228,7 @@ def mode(
   # Solve for modes.
   w, x, err, iters = _subspace_iteration(
       _operator(epsilon, omega, shift[:, 0]),
-      jnp.flip(init, axis=0),  # Excitation-to-field flip.
+      init,
       max_iters,
       tol,
   )
