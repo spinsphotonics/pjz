@@ -300,6 +300,7 @@ def _overlap(mode, beta, pos, is_fwd, output):
   # _prop_axis(mode)
   # def is_axis(i):
   #   return 3 - (arr.ndim - i) == "xyz".find(axis)
+  mode = jnp.conj(mode)
 
   # TODO: Document the beta convention somewhere.
   sample_at = ((pos + 1, pos + 2) if is_fwd else (pos - 2, pos - 1))
