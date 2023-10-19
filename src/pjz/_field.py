@@ -108,7 +108,8 @@ def _pml_sigma(pml_widths, zz, ln_R, m):
 def _ramped_sin(omega, width, delay, dt, tt):
   """Sine function with a gradual ramp."""
   t = omega[:, None] * dt * jnp.arange(tt)
-  return jnp.mean(((1 + jnp.tanh(t / width - delay)) / 2) * jnp.sin(t), axis=0)
+  waveforms = ((1 + jnp.tanh(t / width - delay)) / 2) * jnp.exp(1j * t)
+  return jnp.mean(waveforms, axis=0)
 
 
 def _sampling_interval(
@@ -200,8 +201,14 @@ def field(
              pad_zz)
 
   # Take care of input waveform and output transform.
-  source_waveform = _ramped_sin(omega, source_ramp, source_delay, dt, tt)
-  source_waveform = jnp.pad(source_waveform[:, None], ((0, 0), (0, 1)))
+  rsin = _ramped_sin(omega, source_ramp, source_delay, dt, tt)
+  if source.shape[3] == 1:  # z-based source is allowed quadrature components.
+    source_waveform = jnp.stack([jnp.imag(rsin), jnp.real(rsin)], axis=-1)
+  else:
+    source_waveform = jnp.pad(jnp.imag(rsin)[:, None], ((0, 0), (0, 1)))
+
+  # source_waveform = _ramped_sin(omega, source_ramp, source_delay, dt, tt)
+  # source_waveform = jnp.pad(source_waveform[:, None], ((0, 0), (0, 1)))
 
   interval = _sampling_interval(
       omega_range[0], omega_range[1], omega.shape[0], dt)
@@ -224,7 +231,8 @@ def field(
     source_pos += 1
     source_waveform = jnp.flip(source_waveform, axis=1)
   elif source.shape[3] == 1:
-    source = jnp.pad(source[None, ...], ((0, 1),) + 4 * ((0, 0),))
+    # source = jnp.pad(source[None, ...], ((0, 1),) + 4 * ((0, 0),))
+    source = jnp.stack([jnp.imag(source), jnp.real(source)])
 
   # Boundary conditions.
   absorption_mask = _absorption_mask(epsilon.shape[1] + 2 * absorption_padding,
@@ -293,6 +301,7 @@ def _overlap(mode, beta, pos, is_fwd, output):
   # _prop_axis(mode)
   # def is_axis(i):
   #   return 3 - (arr.ndim - i) == "xyz".find(axis)
+  # mode = jnp.conj(mode)
 
   # TODO: Document the beta convention somewhere.
   sample_at = ((pos + 1, pos + 2) if is_fwd else (pos - 2, pos - 1))
