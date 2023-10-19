@@ -108,7 +108,8 @@ def _pml_sigma(pml_widths, zz, ln_R, m):
 def _ramped_sin(omega, width, delay, dt, tt):
   """Sine function with a gradual ramp."""
   t = omega[:, None] * dt * jnp.arange(tt)
-  return jnp.mean(((1 + jnp.tanh(t / width - delay)) / 2) * jnp.exp(1j * t), axis=0)
+  waveforms = ((1 + jnp.tanh(t / width - delay)) / 2) * jnp.exp(1j * t)
+  return jnp.mean(waveforms, axis=0)
 
 
 def _sampling_interval(
@@ -300,7 +301,7 @@ def _overlap(mode, beta, pos, is_fwd, output):
   # _prop_axis(mode)
   # def is_axis(i):
   #   return 3 - (arr.ndim - i) == "xyz".find(axis)
-  mode = jnp.conj(mode)
+  # mode = jnp.conj(mode)
 
   # TODO: Document the beta convention somewhere.
   sample_at = ((pos + 1, pos + 2) if is_fwd else (pos - 2, pos - 1))
