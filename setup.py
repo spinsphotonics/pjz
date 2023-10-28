@@ -23,7 +23,7 @@ setup(
     description=("pjz is JAX and fdtd-z."),
     long_description=read("README.md"),
     long_description_content_type="text/markdown",
-    install_requires=["fdtdz>=1.1.2"],
+    install_requires=["fdtdz>=1.1.3"],
     setup_requires=["setuptools_scm"],
     use_scm_version=True,
     package_dir={"": "src"},

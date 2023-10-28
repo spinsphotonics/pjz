@@ -48,6 +48,7 @@ class SimParams(NamedTuple):
   pml_alpha_coeff: float = 0.0
   pml_sigma_lnr: float = 0.5
   pml_sigma_m: float = 1.3
+  use_z_as_batch: bool = False
   use_reduced_precision: bool = True
   launch_params: Any = None
 
@@ -192,7 +193,7 @@ def field(
   # TODO: Consider doing some shape testing
   (omega_range, tt, dt, source_ramp, source_delay, absorption_padding,
    absorption_coeff, pml_widths, pml_alpha_coeff, pml_sigma_lnr, pml_sigma_m,
-   use_reduced_precision, launch_params) = sim_params
+   use_z_as_batch, use_reduced_precision, launch_params) = sim_params
 
   # TODO: Document this.
   pad_zz = _pad_zz(epsilon.shape[3], pml_widths, use_reduced_precision)
@@ -239,10 +240,15 @@ def field(
                                      epsilon.shape[2] + 2 * absorption_padding,
                                      absorption_padding, absorption_coeff)
 
-  pml_sigma = _pml_sigma(pml_widths, _zz(pml_widths, use_reduced_precision),
-                         pml_sigma_lnr, pml_sigma_m)
-  pml_kappa = jnp.ones_like(pml_sigma)
-  pml_alpha = pml_alpha_coeff * jnp.ones_like(pml_sigma)
+  if use_z_as_batch:
+    pml_kappa = jnp.inf * jnp.ones((_zz(pml_widths, use_reduced_precision), 2))
+    pml_sigma = jnp.zeros_like(pml_kappa)
+    pml_alpha = jnp.zeros_like(pml_kappa)
+  else:
+    pml_sigma = _pml_sigma(pml_widths, _zz(pml_widths, use_reduced_precision),
+                           pml_sigma_lnr, pml_sigma_m)
+    pml_kappa = jnp.ones_like(pml_sigma)
+    pml_alpha = pml_alpha_coeff * jnp.ones_like(pml_sigma)
 
   # Simulate.
   fields = fdtdz_jax.fdtdz(
@@ -261,6 +267,7 @@ def field(
       launch_params=launch_params,
       offset=(padding[0][0], padding[1][0], padding[2][0]),
   )
+  return fields  # TODO: Remove.
 
   # Convert to complex.
   output_phases = _output_phases(omega, output_steps, dt)
