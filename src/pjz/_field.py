@@ -267,7 +267,6 @@ def field(
       launch_params=launch_params,
       offset=(padding[0][0], padding[1][0], padding[2][0]),
   )
-  return fields  # TODO: Remove.
 
   # Convert to complex.
   output_phases = _output_phases(omega, output_steps, dt)
