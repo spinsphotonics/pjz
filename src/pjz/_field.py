@@ -320,7 +320,15 @@ def _overlap(mode, beta, pos, is_fwd, output):
   # print(f"{beta.shape} {vals.shape}")
   # jax.debug.print(f"vals shape is {vals.shape}")
   # jax.debug.print("vals {vals}", vals=vals)
-  x = jnp.array([1, 2]) if is_fwd else jnp.array([-2, -1])
+  
+  #x = jnp.array([1, 2]) if is_fwd else jnp.array([-2, -1])
+  if is_fwd is None:
+    x = jnp.array([0, 0])
+  elif is_fwd:
+    x = jnp.array([1, 2])
+  else:
+    x = jnp.array([-2, -1])
+    
   return _amplitudes(beta, vals, x)
 
   # TODO: Remove.
@@ -394,7 +402,7 @@ def scatter(
     modes: Tuple[jax.Array],
     betas: Tuple[jax.Array],
     pos: Tuple[int],
-    is_fwd: Tuple[bool],
+    is_fwd: Tuple[Any],
     sim_params: SimParams,
 ):
   """Differentiable time-harmonic scattering values between ``modes``.
