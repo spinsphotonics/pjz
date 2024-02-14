@@ -308,11 +308,22 @@ def _overlap(mode, beta, pos, is_fwd, output):
   # def is_axis(i):
   #   return 3 - (arr.ndim - i) == "xyz".find(axis)
   # mode = jnp.conj(mode)
-
+  if is_fwd is None:
+    x = jnp.array([0, 0])
+    sample_at = (pos, pos)
+    beta = 0
+  elif is_fwd:
+    x = jnp.array([1, 2])
+    sample_at = (pos + 1, pos + 2)
+    beta *= 1
+  else:
+    x = jnp.array([-2, -1])
+    sample_at = (pos - 2, pos - 1)
+    beta *= -1
   # TODO: Document the beta convention somewhere.
-  sample_at = ((pos + 1, pos + 2) if is_fwd else (pos - 2, pos - 1))
+  # sample_at = ((pos + 1, pos + 2) if is_fwd else (pos - 2, pos - 1))
   # jax.debug.print("sample_at {sample_at}", sample_at=sample_at)
-  beta *= 1 if is_fwd else -1
+  # beta *= 1 if is_fwd else -1
   vals = jnp.stack(
       [jnp.sum(mode * _transverse_slice(output, p, _prop_axis(mode)),
                axis=(-4, -3, -2, -1)) for p in sample_at],
@@ -322,12 +333,7 @@ def _overlap(mode, beta, pos, is_fwd, output):
   # jax.debug.print("vals {vals}", vals=vals)
   
   #x = jnp.array([1, 2]) if is_fwd else jnp.array([-2, -1])
-  if is_fwd is None:
-    x = jnp.array([0, 0])
-  elif is_fwd:
-    x = jnp.array([1, 2])
-  else:
-    x = jnp.array([-2, -1])
+
     
   return _amplitudes(beta, vals, x)
 
@@ -350,7 +356,7 @@ def _scatter_impl(epsilon, omega, modes, betas, pos, is_fwd, sim_params):
             for (m, p) in zip(modes, pos)]
 
   # Detect injected fields.
-  amplitudes = [_overlap(m, b, p, fwd, f)[:, 0]
+  amplitudes = [jnp.ones(_overlap(m, b, p, fwd, f)[:, 0]
                 for f, m, b, p, fwd in zip(fields, modes, betas, pos, is_fwd)]
 
   # # Normalize by injected amplitudes.
