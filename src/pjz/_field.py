@@ -311,7 +311,7 @@ def _overlap(mode, beta, pos, is_fwd, output):
   if is_fwd is None:
     x = jnp.array([0, 0])
     sample_at = (pos, pos)
-    beta = 0
+    beta *= 0
   elif is_fwd:
     x = jnp.array([1, 2])
     sample_at = (pos + 1, pos + 2)
