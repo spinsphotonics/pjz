@@ -356,7 +356,7 @@ def _scatter_impl(epsilon, omega, modes, betas, pos, is_fwd, sim_params):
             for (m, p) in zip(modes, pos)]
 
   # Detect injected fields.
-  amplitudes = [jnp.ones_like(b) if is_fwd is None else _overlap(m, b, p, fwd, f)[:, 0]
+  amplitudes = [jnp.ones_like(b) if fwd is None else _overlap(m, b, p, fwd, f)[:, 0]
                 for f, m, b, p, fwd in zip(fields, modes, betas, pos, is_fwd)]
 
   # # Normalize by injected amplitudes.
