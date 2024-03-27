@@ -7,7 +7,8 @@ from typing import Tuple
 from math import prod
 
 
-def _render_single(layers, layer_pos, grid_start, grid_end, m, axis):
+def _render_single(
+  layers, layer_pos, grid_start, grid_end, m, axis, use_simple_averaging):
   # In-plane offsets.
   if axis != "x":
     layers = jnp.pad(layers[:, :-m, :], ((0, 0), (m, 0), (0, 0)), "edge")
@@ -56,13 +57,18 @@ def _render_single(layers, layer_pos, grid_start, grid_end, m, axis):
              jnp.concatenate([layer_pos, jnp.array([jnp.inf])]))]
 
   # Ratio of cell occupied by each layer.
-  u = (p1 - p0) / (grid_end - grid_start)
-
-  # Average position of each layer inside each cell with respect to cell center.
-  z = (p0 + p1) / 2 - (grid_start + grid_end) / 2
+  u = (p1 - p1) / (grid_end - grid_start)
 
   # Reduces across the layer dimension.
   def cross(x, y): return jnp.einsum("lxy,lz->xyz", x, y)
+
+  if use_simple_averaging:
+    # Note that ``avg`` and ``u`` are of shape ``(num_layers, xx, yy)`` and 
+    # ``(num_layers, zz)`` respectively.
+    return cross(avg, u)
+
+  # Average position of each layer inside each cell with respect to cell center.
+  z = (p0 + p1) / 2 - (grid_start + grid_end) / 2
 
   # Average of inverse across all layers.
   aoi = cross(aoi, u)
@@ -89,9 +95,10 @@ def _render_single(layers, layer_pos, grid_start, grid_end, m, axis):
 
 
 # TODO: Get rid of this once the testing is figured out.
-def _render(layers, layer_pos, grid_start, grid_end, m):
+def _render(layers, layer_pos, grid_start, grid_end, m, use_simple_averaging):
   return jnp.stack(
-      [_render_single(layers, layer_pos, grid_start, grid_end, m, axis)
+      [_render_single(
+        layers, layer_pos, grid_start, grid_end, m, axis, use_simple_averaging)
        for axis in "xyz"])
 
 
@@ -100,12 +107,13 @@ def epsilon(
         interface_positions: jax.Array,
         magnification: int,
         zz: int,
+        use_simple_averaging: bool = True,
 ) -> jax.Array:
   """Render a three-dimensional vector array of permittivity values.
 
   Produces a 3D vector array of permittivity values on the Yee cell based on a
-  layered stack of 2D profiles at magnification ``2 * m``. Along the z-axis, both
-  the layer boundaries and grid positions are allowed to vary continuously,
+  layered stack of 2D profiles at magnification ``2 * m``. Along the z-axis,
+  both the layer boundaries and grid positions are allowed to vary continuously,
   while along the x- and y-axes the size of each (unmagnified) cell is assumed
   to be ``1``.
 
@@ -115,9 +123,9 @@ def epsilon(
   within each layer.
 
   Instead, the diagonal elements of the projection matrix for a given subvolume
-  are estimated by computing gradients across it where ``df(u)/du`` is computed as
-  the integral of ``f(u) * u`` over the integral of ``u**2``  where ``u`` is relative
-  to the center of the cell.
+  are estimated by computing gradients across it where ``df(u)/du`` is computed
+  as the integral of ``f(u) * u`` over the integral of ``u**2``  where ``u`` is
+  relative to the center of the cell.
 
   .. [#subpixel_ref] Farjadpour, Ardavan, et al. "Improving accuracy by subpixel
       smoothing in the finite-difference time domain." Optics letters 31.20
@@ -127,8 +135,10 @@ def epsilon(
     layers: ``(ll, 2 * m * xx, 2 * m * yy)`` array of magnified layer profiles.
     interface_positions: ``(ll - 1)`` array of interface positions between the
       ``ll`` layer. Assumed to be in monotonically increasing order.
-    magnification: Denotes a ``2 * m`` in-plane magnification factor of layer profiles.
+    magnification: Denotes a ``2 * m`` in-plane magnification factor of layer
+      profiles.
     zz: Number of cells along z-axis.
+    use_simple_averaging: If ``True``, fall back to a simple averaging scheme.
 
   Returns:
     ``(3, xx, yy, zz)`` array of permittivity values with offsets and vector
@@ -140,4 +150,6 @@ def epsilon(
       interface_positions,
       jnp.arange(zz)[:, None] + jnp.array([[-0.5, 0]]),
       jnp.arange(zz)[:, None] + jnp.array([[0.5, 1]]),
-      magnification)
+      magnification,
+      use_simple_averaging,
+  )
