@@ -57,7 +57,7 @@ def _render_single(
              jnp.concatenate([layer_pos, jnp.array([jnp.inf])]))]
 
   # Ratio of cell occupied by each layer.
-  u = (p1 - p1) / (grid_end - grid_start)
+  u = (p1 - p0) / (grid_end - grid_start)
 
   # Reduces across the layer dimension.
   def cross(x, y): return jnp.einsum("lxy,lz->xyz", x, y)
