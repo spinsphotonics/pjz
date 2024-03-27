@@ -107,7 +107,7 @@ def epsilon(
         interface_positions: jax.Array,
         magnification: int,
         zz: int,
-        use_simple_averaging: bool = True,
+        use_simple_averaging: bool = False,
 ) -> jax.Array:
   """Render a three-dimensional vector array of permittivity values.
 
